@@ -1,0 +1,431 @@
+{
+  "summary": {
+    "total_files": 56,
+    "python_files": 11,
+    "html_files": 44,
+    "css_files": 1,
+    "js_files": 0
+  },
+  "files": {
+    "init_db.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (1 occurrences)"
+      ],
+      "recommendations": [],
+      "stats": {
+        "functions": 0,
+        "classes": 0,
+        "lines": 5
+      }
+    },
+    "upgrade_mike3.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (8 occurrences)"
+      ],
+      "recommendations": [],
+      "stats": {
+        "functions": 0,
+        "classes": 0,
+        "lines": 60
+      }
+    },
+    "test_login.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (9 occurrences)"
+      ],
+      "recommendations": [],
+      "stats": {
+        "functions": 1,
+        "classes": 0,
+        "lines": 60
+      }
+    },
+    "reset_database.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (6 occurrences)"
+      ],
+      "recommendations": [],
+      "stats": {
+        "functions": 1,
+        "classes": 0,
+        "lines": 38
+      }
+    },
+    "test_init_db.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (9 occurrences)",
+        "Code Quality: Long function 'init_db' (51 lines)"
+      ],
+      "recommendations": [],
+      "stats": {
+        "functions": 2,
+        "classes": 0,
+        "lines": 87
+      }
+    },
+    "helpers.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (1 occurrences)"
+      ],
+      "recommendations": [
+        "Good: Uses functools.wraps for decorators",
+        "Good: Implements authentication decorators",
+        "Good: Implements role-based access control"
+      ],
+      "stats": {
+        "functions": 8,
+        "classes": 0,
+        "lines": 65
+      }
+    },
+    "app.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (9 occurrences)",
+        "Flask: Debug mode enabled",
+        "Flask: Route accepts both GET and POST (verify CSRF protection)",
+        "Code Quality: Long function 'profile' (58 lines)",
+        "Code Quality: Long function 'edit_user' (70 lines)",
+        "Code Quality: Long function 'view_client' (51 lines)",
+        "Code Quality: Long function 'new_template' (58 lines)",
+        "Code Quality: Long function 'edit_template' (83 lines)",
+        "Code Quality: Long function 'elements' (52 lines)"
+      ],
+      "recommendations": [
+        "Good: Uses functools.wraps for decorators",
+        "Good: Implements authentication decorators",
+        "Good: Implements role-based access control"
+      ],
+      "stats": {
+        "functions": 50,
+        "classes": 0,
+        "lines": 1836
+      }
+    },
+    "blueprints/__init__.py": {
+      "issues": [],
+      "recommendations": [],
+      "stats": {
+        "functions": 0,
+        "classes": 0,
+        "lines": 2
+      }
+    },
+    "blueprints/locations_bp.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (1 occurrences)"
+      ],
+      "recommendations": [
+        "Good: Implements authentication decorators",
+        "Good: Implements role-based access control"
+      ],
+      "stats": {
+        "functions": 7,
+        "classes": 0,
+        "lines": 190
+      }
+    },
+    "blueprints/tasks_bp.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (1 occurrences)"
+      ],
+      "recommendations": [
+        "Good: Implements authentication decorators",
+        "Good: Implements role-based access control"
+      ],
+      "stats": {
+        "functions": 9,
+        "classes": 0,
+        "lines": 262
+      }
+    },
+    "blueprints/calendar_bp.py": {
+      "issues": [
+        "Code Quality: Print statements (should use logging) (15 occurrences)",
+        "Code Quality: Long function 'export_calendar' (77 lines)",
+        "Code Quality: Long function 'import_calendar' (145 lines)",
+        "Code Quality: Long function 'api_events' (95 lines)",
+        "Code Quality: Long function 'api_quick_add_event' (70 lines)",
+        "Code Quality: Long function 'api_update_event_dates' (87 lines)",
+        "Code Quality: Long function 'check_event_conflicts' (68 lines)",
+        "Code Quality: Long function 'new_event' (140 lines)",
+        "Code Quality: Long function 'edit_event' (136 lines)",
+        "Code Quality: Long function 'generate_invoice_pdf' (51 lines)",
+        "Code Quality: Long function 'import_sample_events' (182 lines)"
+      ],
+      "recommendations": [
+        "Good: Implements authentication decorators",
+        "Good: Implements role-based access control"
+      ],
+      "stats": {
+        "functions": 18,
+        "classes": 0,
+        "lines": 1409
+      }
+    },
+    "frontend_examples.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/element_types.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/edit_template.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_category.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/forgot_password.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_user.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/view_invoice.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_element.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/reset_password.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/login.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_element.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_equipment.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/users.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/profile.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/edit_client.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_client.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/register.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/locations.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/kits.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/calendar.html": {
+      "issues": [
+        "Security: External script inclusion (8 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/event_tasks.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/view_element.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_element_type.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/view_event.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_event.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_element_type.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_category.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_kit.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (2 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/new_equipment.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/index.html": {
+      "issues": [
+        "Security: External script inclusion (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/elements.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/templates.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_event.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_template.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/invoices.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/categories.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/view_kit.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/invoice_pdf.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/new_kit.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (2 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/equipment.html": {
+      "issues": [
+        "Accessibility: Input elements without labels (1 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "templates/view_client.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/edit_user.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/clients.html": {
+      "issues": [],
+      "recommendations": []
+    },
+    "templates/layout.html": {
+      "issues": [
+        "Security: External script inclusion (2 occurrences)"
+      ],
+      "recommendations": []
+    },
+    "static/style.css": {
+      "issues": [
+        "CSS: Excessive use of !important (28 occurrences)"
+      ],
+      "recommendations": [
+        "Good: Uses CSS custom properties (variables)",
+        "Good: Responsive design with media queries",
+        "Good: Dark theme support"
+      ]
+    }
+  },
+  "overall_issues": [
+    "init_db.py: Code Quality: Print statements (should use logging) (1 occurrences)",
+    "upgrade_mike3.py: Code Quality: Print statements (should use logging) (8 occurrences)",
+    "test_login.py: Code Quality: Print statements (should use logging) (9 occurrences)",
+    "reset_database.py: Code Quality: Print statements (should use logging) (6 occurrences)",
+    "test_init_db.py: Code Quality: Print statements (should use logging) (9 occurrences)",
+    "test_init_db.py: Code Quality: Long function 'init_db' (51 lines)",
+    "helpers.py: Code Quality: Print statements (should use logging) (1 occurrences)",
+    "app.py: Code Quality: Print statements (should use logging) (9 occurrences)",
+    "app.py: Flask: Debug mode enabled",
+    "app.py: Flask: Route accepts both GET and POST (verify CSRF protection)",
+    "app.py: Code Quality: Long function 'profile' (58 lines)",
+    "app.py: Code Quality: Long function 'edit_user' (70 lines)",
+    "app.py: Code Quality: Long function 'view_client' (51 lines)",
+    "app.py: Code Quality: Long function 'new_template' (58 lines)",
+    "app.py: Code Quality: Long function 'edit_template' (83 lines)",
+    "app.py: Code Quality: Long function 'elements' (52 lines)",
+    "blueprints/locations_bp.py: Code Quality: Print statements (should use logging) (1 occurrences)",
+    "blueprints/tasks_bp.py: Code Quality: Print statements (should use logging) (1 occurrences)",
+    "blueprints/calendar_bp.py: Code Quality: Print statements (should use logging) (15 occurrences)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'export_calendar' (77 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'import_calendar' (145 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'api_events' (95 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'api_quick_add_event' (70 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'api_update_event_dates' (87 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'check_event_conflicts' (68 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'new_event' (140 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'edit_event' (136 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'generate_invoice_pdf' (51 lines)",
+    "blueprints/calendar_bp.py: Code Quality: Long function 'import_sample_events' (182 lines)",
+    "templates/element_types.html: Accessibility: Input elements without labels (1 occurrences)",
+    "templates/profile.html: Accessibility: Input elements without labels (1 occurrences)",
+    "templates/calendar.html: Security: External script inclusion (8 occurrences)",
+    "templates/edit_kit.html: Accessibility: Input elements without labels (2 occurrences)",
+    "templates/index.html: Security: External script inclusion (1 occurrences)",
+    "templates/elements.html: Accessibility: Input elements without labels (1 occurrences)",
+    "templates/categories.html: Accessibility: Input elements without labels (1 occurrences)",
+    "templates/new_kit.html: Accessibility: Input elements without labels (2 occurrences)",
+    "templates/equipment.html: Accessibility: Input elements without labels (1 occurrences)",
+    "templates/layout.html: Security: External script inclusion (2 occurrences)",
+    "static/style.css: CSS: Excessive use of !important (28 occurrences)"
+  ],
+  "overall_recommendations": [
+    "helpers.py: Good: Uses functools.wraps for decorators",
+    "helpers.py: Good: Implements authentication decorators",
+    "helpers.py: Good: Implements role-based access control",
+    "app.py: Good: Uses functools.wraps for decorators",
+    "app.py: Good: Implements authentication decorators",
+    "app.py: Good: Implements role-based access control",
+    "blueprints/locations_bp.py: Good: Implements authentication decorators",
+    "blueprints/locations_bp.py: Good: Implements role-based access control",
+    "blueprints/tasks_bp.py: Good: Implements authentication decorators",
+    "blueprints/tasks_bp.py: Good: Implements role-based access control",
+    "blueprints/calendar_bp.py: Good: Implements authentication decorators",
+    "blueprints/calendar_bp.py: Good: Implements role-based access control",
+    "static/style.css: Good: Uses CSS custom properties (variables)",
+    "static/style.css: Good: Responsive design with media queries",
+    "static/style.css: Good: Dark theme support"
+  ]
+}

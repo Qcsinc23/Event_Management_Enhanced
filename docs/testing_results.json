@@ -1,0 +1,162 @@
+{
+  "passed": 22,
+  "failed": 0,
+  "errors": [],
+  "warnings": [],
+  "test_details": [
+    {
+      "test": "Login Page Access",
+      "status": "PASS",
+      "message": "Login page loads successfully",
+      "timestamp": "2025-07-10T23:46:33.179490",
+      "details": {}
+    },
+    {
+      "test": "Valid Login",
+      "status": "PASS",
+      "message": "Admin login successful",
+      "timestamp": "2025-07-10T23:46:33.272284",
+      "details": {}
+    },
+    {
+      "test": "Invalid Login Protection",
+      "status": "PASS",
+      "message": "Invalid credentials rejected",
+      "timestamp": "2025-07-10T23:46:33.274036",
+      "details": {}
+    },
+    {
+      "test": "Logout Functionality",
+      "status": "PASS",
+      "message": "Logout redirects to login",
+      "timestamp": "2025-07-10T23:46:33.275759",
+      "details": {}
+    },
+    {
+      "test": "Protected Route /users",
+      "status": "PASS",
+      "message": "Requires authentication",
+      "timestamp": "2025-07-10T23:46:33.277298",
+      "details": {}
+    },
+    {
+      "test": "Protected Route /users/new",
+      "status": "PASS",
+      "message": "Requires authentication",
+      "timestamp": "2025-07-10T23:46:33.278814",
+      "details": {}
+    },
+    {
+      "test": "Protected Route /equipment",
+      "status": "PASS",
+      "message": "Requires authentication",
+      "timestamp": "2025-07-10T23:46:33.280316",
+      "details": {}
+    },
+    {
+      "test": "Protected Route /equipment/new",
+      "status": "PASS",
+      "message": "Requires authentication",
+      "timestamp": "2025-07-10T23:46:33.281812",
+      "details": {}
+    },
+    {
+      "test": "Database Connection",
+      "status": "PASS",
+      "message": "Connected, 2 users found",
+      "timestamp": "2025-07-10T23:46:33.282223",
+      "details": {}
+    },
+    {
+      "test": "Data Integrity",
+      "status": "PASS",
+      "message": "No orphaned event records",
+      "timestamp": "2025-07-10T23:46:33.282268",
+      "details": {}
+    },
+    {
+      "test": "Client List Access",
+      "status": "PASS",
+      "message": "Client list loads successfully",
+      "timestamp": "2025-07-10T23:46:33.364106",
+      "details": {}
+    },
+    {
+      "test": "New Client Form",
+      "status": "PASS",
+      "message": "New client form accessible",
+      "timestamp": "2025-07-10T23:46:33.366875",
+      "details": {}
+    },
+    {
+      "test": "Calendar Access",
+      "status": "PASS",
+      "message": "Calendar page loads successfully",
+      "timestamp": "2025-07-10T23:46:33.446993",
+      "details": {}
+    },
+    {
+      "test": "Events API",
+      "status": "PASS",
+      "message": "API returns 3 events",
+      "timestamp": "2025-07-10T23:46:33.448348",
+      "details": {}
+    },
+    {
+      "test": "Elements Page",
+      "status": "PASS",
+      "message": "Elements page loads successfully",
+      "timestamp": "2025-07-10T23:46:33.531864",
+      "details": {}
+    },
+    {
+      "test": "Element Types Page",
+      "status": "PASS",
+      "message": "Element types page loads successfully",
+      "timestamp": "2025-07-10T23:46:33.541076",
+      "details": {}
+    },
+    {
+      "test": "Kits Page",
+      "status": "PASS",
+      "message": "Kits page loads successfully",
+      "timestamp": "2025-07-10T23:46:33.549301",
+      "details": {}
+    },
+    {
+      "test": "Locations Blueprint",
+      "status": "PASS",
+      "message": "Locations page accessible",
+      "timestamp": "2025-07-10T23:46:33.632428",
+      "details": {}
+    },
+    {
+      "test": "SQL Injection Protection",
+      "status": "PASS",
+      "message": "Database protected from SQL injection",
+      "timestamp": "2025-07-10T23:46:33.634462",
+      "details": {}
+    },
+    {
+      "test": "XSS Protection",
+      "status": "PASS",
+      "message": "XSS payload properly escaped",
+      "timestamp": "2025-07-10T23:46:33.711526",
+      "details": {}
+    },
+    {
+      "test": "Page Load Time /login",
+      "status": "PASS",
+      "message": "Loaded in 0.001s",
+      "timestamp": "2025-07-10T23:46:33.712368",
+      "details": {}
+    },
+    {
+      "test": "Page Load Time /",
+      "status": "PASS",
+      "message": "Loaded in 0.072s",
+      "timestamp": "2025-07-10T23:46:33.784693",
+      "details": {}
+    }
+  ]
+}

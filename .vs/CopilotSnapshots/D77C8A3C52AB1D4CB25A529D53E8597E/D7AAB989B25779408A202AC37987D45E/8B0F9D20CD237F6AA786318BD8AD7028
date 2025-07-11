@@ -1,0 +1,38 @@
+﻿import os
+import sqlite3
+from app import generate_password_hash
+
+DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
+
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'admin'
+ADMIN_EMAIL = 'admin@example.com'
+ADMIN_FULL_NAME = 'Administrator'
+ADMIN_ROLE = 'admin'
+
+def main():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Check if admin user exists
+    cur.execute('SELECT * FROM users WHERE username = ?', (ADMIN_USERNAME,))
+    user = cur.fetchone()
+    password_hash = generate_password_hash(ADMIN_PASSWORD)
+
+    if user:
+        # Update password and role if needed
+        cur.execute('''UPDATE users SET password_hash = ?, role = ?, email = ?, full_name = ? WHERE username = ?''',
+                    (password_hash, ADMIN_ROLE, ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME))
+        print('Admin user found. Password and role updated.')
+    else:
+        # Insert new admin user
+        cur.execute('''INSERT INTO users (username, password_hash, email, full_name, role) VALUES (?, ?, ?, ?, ?)''',
+                    (ADMIN_USERNAME, password_hash, ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_ROLE))
+        print('Admin user created.')
+    conn.commit()
+    conn.close()
+    print('Done.')
+
+if __name__ == '__main__':
+    main()
