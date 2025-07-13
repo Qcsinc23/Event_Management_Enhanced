@@ -129,11 +129,14 @@ from helpers import get_db, close_db, login_required, role_required, get_current
 # Database initialization function (uses get_db)
 def init_db():
     """Initialize the database with schema"""
-    db = get_db()
-    # Use app.open_resource which requires the app context
-    with app.app_context():
-        with app.open_resource('schema.sql') as f:
-            db.executescript(f.read().decode('utf8'))
+    try:
+        db = get_db()
+        with app.app_context():
+            with app.open_resource('schema.sql') as f:
+                db.executescript(f.read().decode('utf8'))
+        print("Database initialized successfully.")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
 
 @app.cli.command('init-db')
 def init_db_command():
