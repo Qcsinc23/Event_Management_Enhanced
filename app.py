@@ -148,11 +148,16 @@ def init_db_command():
 app.teardown_appcontext(close_db)
 
 # Routes (These use the imported helpers)
+@app.route('/landing')
+def landing():
+    """Landing page for visitors"""
+    return render_template('landing.html')
+
 @app.route('/')
 def index():
     """Home page / dashboard"""
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('landing'))
 
     db = get_db()
     # Get upcoming events
@@ -579,7 +584,7 @@ def logout():
     """User logout"""
     session.clear()
     flash('You have been logged out', 'info')
-    return redirect(url_for('login'))
+    return redirect(url_for('landing'))
 
 # Client Management Routes
 @app.route('/clients')

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiet Craft Solutions - Specialized Event Logistics & Courier Services</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'qcs-blue': '#1e40af',
+                        'qcs-navy': '#1e293b',
+                        'qcs-gray': '#64748b',
+                        'qcs-light': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #1e293b 100%);
+        }
+        
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .fade-in-delay-1 { animation-delay: 0.2s; }
+        .fade-in-delay-2 { animation-delay: 0.4s; }
+        .fade-in-delay-3 { animation-delay: 0.6s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+    <!-- Navigation Header -->
+    <nav class="fixed w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-lg flex items-center justify-center">
+                        <i class="fas fa-truck text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-qcs-navy">Quiet Craft Solutions</h1>
+                        <p class="text-xs text-qcs-gray">Event Logistics Excellence</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#services" class="text-qcs-gray hover:text-qcs-blue transition-colors">Services</a>
+                    <a href="#about" class="text-qcs-gray hover:text-qcs-blue transition-colors">About</a>
+                    <a href="#contact" class="text-qcs-gray hover:text-qcs-blue transition-colors">Contact</a>
+                </div>
+                
+                <!-- Auth Buttons -->
+                <div class="flex items-center space-x-4">
+                    {% if session.user_id %}
+                        <a href="{{ url_for('index') }}" class="text-qcs-gray hover:text-qcs-blue transition-colors">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="bg-qcs-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="text-qcs-gray hover:text-qcs-blue transition-colors">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="bg-qcs-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Get Started
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-qcs-gray" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <div class="px-4 py-4 space-y-4">
+                <a href="#services" class="block text-qcs-gray hover:text-qcs-blue">Services</a>
+                <a href="#about" class="block text-qcs-gray hover:text-qcs-blue">About</a>
+                <a href="#contact" class="block text-qcs-gray hover:text-qcs-blue">Contact</a>
+                {% if not session.user_id %}
+                    <div class="pt-4 border-t border-gray-200 space-y-2">
+                        <a href="{{ url_for('login') }}" class="block w-full text-center bg-gray-100 text-qcs-navy px-4 py-2 rounded-lg">Login</a>
+                        <a href="{{ url_for('register') }}" class="block w-full text-center bg-qcs-blue text-white px-4 py-2 rounded-lg">Get Started</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center pt-16 bg-blue-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Hero Content -->
+                <div class="text-qcs-navy">
+                    <div class="fade-in">
+                        <h1 class="text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                            The Logistics Backbone Behind 
+                            <span class="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                                Successful Events
+                            </span>
+                        </h1>
+                    </div>
+                    
+                    <div class="fade-in fade-in-delay-1">
+                        <p class="text-xl text-qcs-gray mb-8 leading-relaxed">
+                            Quiet Craft Solutions ensures your event equipment and supplies arrive on time, every time—with complete accountability from pickup to placement.
+                        </p>
+                    </div>
+                    
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                            {% if not session.user_id %}
+                                <a href="{{ url_for('register') }}" class="bg-qcs-blue text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
+                                    <i class="fas fa-rocket mr-2"></i>
+                                    Get Started Today
+                                </a>
+                                <a href="#contact" class="border-2 border-qcs-blue text-qcs-blue px-8 py-4 rounded-lg font-semibold hover:bg-qcs-blue hover:text-white transition-colors inline-flex items-center justify-center">
+                                    <i class="fas fa-phone mr-2"></i>
+                                    Contact Us
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('index') }}" class="bg-qcs-blue text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>
+                                    Go to Dashboard
+                                </a>
+                                <a href="{{ url_for('calendar.calendar') }}" class="border-2 border-qcs-blue text-qcs-blue px-8 py-4 rounded-lg font-semibold hover:bg-qcs-blue hover:text-white transition-colors inline-flex items-center justify-center">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    View Calendar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="fade-in fade-in-delay-3">
+                        <div class="flex items-center space-x-6 text-qcs-gray">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                                <span>Trusted by Fortune 500</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-yellow-600 mr-2"></i>
+                                <span>On-time Guarantee</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hero Visual -->
+                <div class="relative">
+                    <div class="floating">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-8 border border-blue-200 shadow-xl">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="bg-blue-50 rounded-lg p-4 text-center border border-blue-200">
+                                    <i class="fas fa-truck text-3xl text-blue-600 mb-2"></i>
+                                    <p class="text-qcs-navy font-semibold">Strategic Pickup</p>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-4 text-center border border-green-200">
+                                    <i class="fas fa-shield-alt text-3xl text-green-600 mb-2"></i>
+                                    <p class="text-qcs-navy font-semibold">Secure Transport</p>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-4 text-center border border-yellow-200">
+                                    <i class="fas fa-map-marker-alt text-3xl text-yellow-600 mb-2"></i>
+                                    <p class="text-qcs-navy font-semibold">Real-time Tracking</p>
+                                </div>
+                                <div class="bg-purple-50 rounded-lg p-4 text-center border border-purple-200">
+                                    <i class="fas fa-handshake text-3xl text-purple-600 mb-2"></i>
+                                    <p class="text-qcs-navy font-semibold">Venue Coordination</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <p class="text-qcs-gray font-medium mb-8">Trusted by industry leaders</p>
+                <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                    <div class="text-2xl font-bold text-qcs-navy">Horizon Blue Cross Blue Shield</div>
+                    <div class="text-2xl font-bold text-qcs-navy">FedEx Custom Critical</div>
+                    <div class="text-2xl font-bold text-qcs-navy">Positive Impact</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-qcs-navy mb-4">Comprehensive Event Logistics Services</h2>
+                <p class="text-xl text-qcs-gray max-w-3xl mx-auto">
+                    We're not just couriers—we're your logistics partners. From initial pickup coordination to final inventory verification at your venue.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Service Card 1 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-route text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Strategic Pickup Coordination</h3>
+                    <p class="text-qcs-gray mb-6">Scheduled collection from multiple vendors, warehouses, and suppliers with consolidated routing for maximum efficiency.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Multi-vendor coordination</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Optimized routing</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Scheduled collections</li>
+                    </ul>
+                </div>
+                
+                <!-- Service Card 2 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Secure Transportation & Handling</h3>
+                    <p class="text-qcs-gray mb-6">Climate-controlled vehicles and specialized handling for delicate AV equipment, custom displays, and high-value materials.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Climate-controlled vehicles</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Specialized handling protocols</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>High-value material security</li>
+                    </ul>
+                </div>
+                
+                <!-- Service Card 3 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-map-marker-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Real-Time Inventory Management</h3>
+                    <p class="text-qcs-gray mb-6">Digital tracking systems with photo documentation, condition reports, and live updates throughout the logistics chain.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Digital tracking systems</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Photo documentation</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Live status updates</li>
+                    </ul>
+                </div>
+                
+                <!-- Service Card 4 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-handshake text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Venue Coordination & Placement</h3>
+                    <p class="text-qcs-gray mb-6">Direct delivery to event spaces with coordination for loading dock schedules, freight elevator access, and setup timing.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Loading dock coordination</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Freight elevator scheduling</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Setup timing optimization</li>
+                    </ul>
+                </div>
+                
+                <!-- Service Card 5 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-bolt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Emergency Response Logistics</h3>
+                    <p class="text-qcs-gray mb-6">Same-day pickup and delivery for last-minute additions, replacements, or forgotten critical items.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Same-day service</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Emergency replacements</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Critical item recovery</li>
+                    </ul>
+                </div>
+                
+                <!-- Service Card 6 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-undo text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-qcs-navy mb-4">Post-Event Collection</h3>
+                    <p class="text-qcs-gray mb-6">Coordinated equipment retrieval and return logistics to close the loop on your event materials.</p>
+                    <ul class="space-y-2 text-sm text-qcs-gray">
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Equipment retrieval</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Return logistics</li>
+                        <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Complete loop closure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What Sets Us Apart Section -->
+    <section class="py-20 bg-qcs-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-qcs-navy mb-4">What Sets Our Event Logistics Apart</h2>
+                <p class="text-xl text-qcs-gray max-w-3xl mx-auto">
+                    Beyond basic delivery, we provide comprehensive logistics solutions tailored for the event industry.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-calendar-check text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Event-Specific Protocols</h3>
+                    </div>
+                    <p class="text-qcs-gray">Understanding setup deadlines, load-in restrictions, and venue requirements</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-clipboard-list text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Chain of Custody Tracking</h3>
+                    </div>
+                    <p class="text-qcs-gray">Complete documentation from pickup to delivery with digital signatures</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-comments text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Proactive Communication</h3>
+                    </div>
+                    <p class="text-qcs-gray">Regular status updates and immediate notification of any logistics issues</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-box-open text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Damage Prevention</h3>
+                    </div>
+                    <p class="text-qcs-gray">Specialized packing, securing, and handling protocols for event equipment</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-clock text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Flexible Scheduling</h3>
+                    </div>
+                    <p class="text-qcs-gray">Early morning, late evening, and weekend deliveries to match event timelines</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-sitemap text-qcs-blue text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-qcs-navy">Multi-Event Coordination</h3>
+                    </div>
+                    <p class="text-qcs-gray">Managing logistics for events across multiple days or locations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-white mb-6">Eliminate Event Logistics Stress</h2>
+            <p class="text-xl text-blue-100 mb-8">
+                Let us handle the coordination so you can focus on creating exceptional experiences
+            </p>
+            
+            {% if not session.user_id %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url_for('register') }}" class="bg-white text-qcs-blue px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Get Started Today
+                    </a>
+                    <a href="#contact" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-qcs-blue transition-colors inline-flex items-center justify-center">
+                        <i class="fas fa-phone mr-2"></i>
+                        Contact Our Team
+                    </a>
+                </div>
+            {% else %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url_for('index') }}" class="bg-white text-qcs-blue px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        Access Your Dashboard
+                    </a>
+                    <a href="{{ url_for('calendar.calendar') }}" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-qcs-blue transition-colors inline-flex items-center justify-center">
+                        <i class="fas fa-calendar mr-2"></i>
+                        Manage Events
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-qcs-navy mb-4">Get In Touch</h2>
+                <p class="text-xl text-qcs-gray">
+                    Your trusted partner for seamless event logistics—because every detail matters when it's showtime.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Phone -->
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-phone text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-qcs-navy mb-2">Phone</h3>
+                    <p class="text-qcs-gray mb-4">Ready to discuss your logistics needs</p>
+                    <a href="tel:201-249-0929" class="text-qcs-blue font-semibold hover:underline">201-249-0929</a>
+                </div>
+                
+                <!-- Email -->
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-envelope text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-qcs-navy mb-2">Email</h3>
+                    <p class="text-qcs-gray mb-4">Send us your requirements</p>
+                    <a href="mailto:sales@quietcraftsolutions.com" class="text-qcs-blue font-semibold hover:underline">sales@quietcraftsolutions.com</a>
+                </div>
+                
+                <!-- Address -->
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-map-marker-alt text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-qcs-navy mb-2">Address</h3>
+                    <p class="text-qcs-gray mb-4">Visit our headquarters</p>
+                    <p class="text-qcs-blue font-semibold">300 Beech Street<br>Teaneck, NJ 07666</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-qcs-navy text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-qcs-blue to-blue-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-truck text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Quiet Craft Solutions</h3>
+                            <p class="text-sm text-blue-200">Event Logistics Excellence</p>
+                        </div>
+                    </div>
+                    <p class="text-blue-200 mb-4 max-w-md">
+                        Your trusted partner for seamless event logistics—because every detail matters when it's showtime.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-blue-200 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-blue-200 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-blue-200 hover:text-white transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Services -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Services</h4>
+                    <ul class="space-y-2 text-blue-200">
+                        <li><a href="#services" class="hover:text-white transition-colors">Strategic Pickup</a></li>
+                        <li><a href="#services" class="hover:text-white transition-colors">Secure Transport</a></li>
+                        <li><a href="#services" class="hover:text-white transition-colors">Real-time Tracking</a></li>
+                        <li><a href="#services" class="hover:text-white transition-colors">Venue Coordination</a></li>
+                        <li><a href="#services" class="hover:text-white transition-colors">Emergency Response</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-blue-200">
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            <a href="tel:201-249-0929" class="hover:text-white transition-colors">201-249-0929</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:sales@quietcraftsolutions.com" class="hover:text-white transition-colors">sales@quietcraftsolutions.com</a>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mr-2 mt-1"></i>
+                            <span>300 Beech Street<br>Teaneck, NJ 07666</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-blue-800 mt-8 pt-8 text-center">
+                <p class="text-blue-200">
+                    © 2025 Quiet Craft Solutions. All rights reserved. | 
+                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a> | 
+                    <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Close mobile menu when clicking on links
+        document.querySelectorAll('#mobileMenu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            });
+        });
+        
+        // Add scroll effect to navbar
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-white');
+                nav.classList.remove('bg-white/95');
+            } else {
+                nav.classList.add('bg-white/95');
+                nav.classList.remove('bg-white');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,69 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - QCS Event Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Register - Quiet Craft Solutions</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'qcs-blue': '#1e40af',
+                        'qcs-navy': '#1e293b',
+                        'qcs-gray': '#64748b',
+                        'qcs-light': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #1e293b 100%);
+        }
+        
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .fade-in-delay-1 { animation-delay: 0.2s; }
+        .fade-in-delay-2 { animation-delay: 0.4s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
 </head>
-<body class="auth-page">
-    <div class="container-fluid h-100">
-        <div class="row h-100">
-            <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                <div class="auth-form-container">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-calendar-check auth-icon"></i>
-                        <h2 class="mt-3">Create Account</h2>
-                        <p class="text-muted">Join QCS Event Management</p>
+<body class="font-sans antialiased min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <!-- Navigation Header -->
+    <nav class="fixed w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="{{ url_for('landing') }}" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-lg flex items-center justify-center">
+                        <i class="fas fa-truck text-white text-lg"></i>
                     </div>
-                    
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <form method="POST" class="auth-form">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email (Optional)</label>
-                            <input type="email" class="form-control" id="email" name="email">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
-                        
-                        <div class="text-center">
-                            <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
-                        </div>
-                    </form>
+                    <div>
+                        <h1 class="text-xl font-bold text-qcs-navy">Quiet Craft Solutions</h1>
+                        <p class="text-xs text-qcs-gray">Event Logistics Excellence</p>
+                    </div>
+                </a>
+                
+                <!-- Back to Home -->
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('landing') }}" class="text-qcs-gray hover:text-qcs-blue transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Home
+                    </a>
                 </div>
             </div>
-            
-            <div class="col-lg-6 auth-bg d-none d-lg-block">
-                <div class="auth-bg-overlay">
-                    <div class="auth-bg-content">
-                        <h3>Professional Event Management</h3>
-                        <p>Streamline your event planning and execution with our comprehensive management platform.</p>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen flex items-center justify-center pt-16 px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-6xl w-full">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left Side - Hero Content -->
+                <div class="hidden lg:block">
+                    <div class="gradient-bg hero-pattern rounded-2xl p-12 text-white">
+                        <div class="fade-in">
+                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-user-plus text-3xl"></i>
+                            </div>
+                            <h2 class="text-4xl font-bold mb-6">Join Our Team</h2>
+                            <p class="text-xl text-blue-100 mb-8 leading-relaxed">
+                                Create your account and start managing event logistics with professional-grade tools and comprehensive features.
+                            </p>
+                        </div>
+                        
+                        <div class="fade-in fade-in-delay-1">
+                            <div class="space-y-4 mb-8">
+                                <div class="flex items-center text-blue-100">
+                                    <i class="fas fa-check-circle text-green-400 mr-3"></i>
+                                    <span>Complete event management suite</span>
+                                </div>
+                                <div class="flex items-center text-blue-100">
+                                    <i class="fas fa-check-circle text-green-400 mr-3"></i>
+                                    <span>Real-time inventory tracking</span>
+                                </div>
+                                <div class="flex items-center text-blue-100">
+                                    <i class="fas fa-check-circle text-green-400 mr-3"></i>
+                                    <span>Client relationship management</span>
+                                </div>
+                                <div class="flex items-center text-blue-100">
+                                    <i class="fas fa-check-circle text-green-400 mr-3"></i>
+                                    <span>Advanced reporting & analytics</span>
+                                </div>
+                            </div>
+                            
+                            <div class="floating">
+                                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold mb-2">500+</div>
+                                        <div class="text-blue-200">Events Managed Successfully</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Register Form -->
+                <div class="w-full max-w-md mx-auto lg:mx-0">
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-gradient-to-br from-qcs-blue to-qcs-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user-plus text-white text-2xl"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-qcs-navy mb-2">Create Account</h2>
+                            <p class="text-qcs-gray">Join our event logistics platform</p>
+                        </div>
+                        
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="mb-6 p-4 rounded-lg {% if category == 'danger' %}bg-red-50 border border-red-200 text-red-700{% elif category == 'success' %}bg-green-50 border border-green-200 text-green-700{% elif category == 'info' %}bg-blue-50 border border-blue-200 text-blue-700{% else %}bg-gray-50 border border-gray-200 text-gray-700{% endif %}">
+                                        <div class="flex items-center">
+                                            {% if category == 'danger' %}
+                                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                            {% elif category == 'success' %}
+                                                <i class="fas fa-check-circle mr-2"></i>
+                                            {% elif category == 'info' %}
+                                                <i class="fas fa-info-circle mr-2"></i>
+                                            {% endif %}
+                                            {{ message }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <!-- Register Form -->
+                        <form method="post" action="{{ url_for('register') }}" class="space-y-5">
+                            <div class="grid grid-cols-1 gap-5">
+                                <div>
+                                    <label for="full_name" class="block text-sm font-semibold text-qcs-navy mb-2">
+                                        <i class="fas fa-id-card mr-2 text-qcs-gray"></i>Full Name
+                                    </label>
+                                    <input type="text" 
+                                           id="full_name" 
+                                           name="full_name" 
+                                           required 
+                                           autofocus 
+                                           placeholder="Enter your full name"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="username" class="block text-sm font-semibold text-qcs-navy mb-2">
+                                        <i class="fas fa-user mr-2 text-qcs-gray"></i>Username
+                                    </label>
+                                    <input type="text" 
+                                           id="username" 
+                                           name="username" 
+                                           required 
+                                           placeholder="Choose a username"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="email" class="block text-sm font-semibold text-qcs-navy mb-2">
+                                        <i class="fas fa-envelope mr-2 text-qcs-gray"></i>Email Address
+                                    </label>
+                                    <input type="email" 
+                                           id="email" 
+                                           name="email" 
+                                           required 
+                                           placeholder="Enter your email address"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="password" class="block text-sm font-semibold text-qcs-navy mb-2">
+                                        <i class="fas fa-lock mr-2 text-qcs-gray"></i>Password
+                                    </label>
+                                    <div class="relative">
+                                        <input type="password" 
+                                               id="password" 
+                                               name="password" 
+                                               required 
+                                               placeholder="Create a password"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white pr-12">
+                                        <button type="button" 
+                                                onclick="togglePassword('password', 'toggleIcon1')" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-qcs-gray hover:text-qcs-blue transition-colors">
+                                            <i class="fas fa-eye" id="toggleIcon1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="confirm_password" class="block text-sm font-semibold text-qcs-navy mb-2">
+                                        <i class="fas fa-lock mr-2 text-qcs-gray"></i>Confirm Password
+                                    </label>
+                                    <div class="relative">
+                                        <input type="password" 
+                                               id="confirm_password" 
+                                               name="confirm_password" 
+                                               required 
+                                               placeholder="Confirm your password"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white pr-12">
+                                        <button type="button" 
+                                                onclick="togglePassword('confirm_password', 'toggleIcon2')" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-qcs-gray hover:text-qcs-blue transition-colors">
+                                            <i class="fas fa-eye" id="toggleIcon2"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Password Strength Indicator -->
+                            <div class="space-y-2">
+                                <div class="text-sm text-qcs-gray">Password strength:</div>
+                                <div class="flex space-x-1">
+                                    <div class="h-2 flex-1 bg-gray-200 rounded" id="strength1"></div>
+                                    <div class="h-2 flex-1 bg-gray-200 rounded" id="strength2"></div>
+                                    <div class="h-2 flex-1 bg-gray-200 rounded" id="strength3"></div>
+                                    <div class="h-2 flex-1 bg-gray-200 rounded" id="strength4"></div>
+                                </div>
+                                <div class="text-xs text-qcs-gray" id="strengthText">Enter a password</div>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full bg-gradient-to-r from-qcs-blue to-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 focus:ring-2 focus:ring-qcs-blue focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02]">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Create Account
+                            </button>
+                        </form>
+                        
+                        <!-- Divider -->
+                        <div class="my-8 flex items-center">
+                            <div class="flex-1 border-t border-gray-300"></div>
+                            <span class="px-4 text-sm text-qcs-gray bg-white">or</span>
+                            <div class="flex-1 border-t border-gray-300"></div>
+                        </div>
+                        
+                        <!-- Login Link -->
+                        <div class="text-center">
+                            <p class="text-qcs-gray">
+                                Already have an account? 
+                                <a href="{{ url_for('login') }}" class="text-qcs-blue hover:text-blue-700 font-semibold transition-colors">
+                                    Sign In
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Hero Content -->
+                    <div class="lg:hidden mt-8">
+                        <div class="gradient-bg hero-pattern rounded-2xl p-8 text-white text-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-rocket text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Get Started Today</h3>
+                            <p class="text-blue-100">
+                                Join the future of event logistics management
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const checks = [
+                /.{8,}/, // At least 8 characters
+                /[a-z]/, // Lowercase letter
+                /[A-Z]/, // Uppercase letter
+                /[0-9]/, // Number
+                /[^A-Za-z0-9]/ // Special character
+            ];
+            
+            checks.forEach(check => {
+                if (check.test(password)) strength++;
+            });
+            
+            return Math.min(strength, 4);
+        }
+        
+        // Update password strength indicator
+        document.getElementById('password').addEventListener('input', function(e) {
+            const password = e.target.value;
+            const strength = checkPasswordStrength(password);
+            const strengthBars = ['strength1', 'strength2', 'strength3', 'strength4'];
+            const strengthText = document.getElementById('strengthText');
+            const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+            const texts = ['Weak', 'Fair', 'Good', 'Strong'];
+            
+            // Reset all bars
+            strengthBars.forEach(bar => {
+                const element = document.getElementById(bar);
+                element.className = 'h-2 flex-1 bg-gray-200 rounded';
+            });
+            
+            // Fill bars based on strength
+            for (let i = 0; i < strength; i++) {
+                const element = document.getElementById(strengthBars[i]);
+                element.className = `h-2 flex-1 rounded ${colors[Math.min(strength - 1, 3)]}`;
+            }
+            
+            // Update text
+            if (password.length === 0) {
+                strengthText.textContent = 'Enter a password';
+                strengthText.className = 'text-xs text-qcs-gray';
+            } else {
+                strengthText.textContent = texts[Math.min(strength - 1, 3)] || 'Very Weak';
+                strengthText.className = `text-xs ${strength < 2 ? 'text-red-600' : strength < 3 ? 'text-yellow-600' : 'text-green-600'}`;
+            }
+        });
+        
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
+            submitBtn.disabled = true;
+        });
+        
+        // Real-time password match validation
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const confirmInput = document.getElementById('confirm_password');
+            
+            if (confirmPassword.length > 0) {
+                if (password === confirmPassword) {
+                    confirmInput.classList.remove('border-red-300', 'focus:ring-red-500');
+                    confirmInput.classList.add('border-green-300', 'focus:ring-green-500');
+                } else {
+                    confirmInput.classList.remove('border-green-300', 'focus:ring-green-500');
+                    confirmInput.classList.add('border-red-300', 'focus:ring-red-500');
+                }
+            } else {
+                confirmInput.classList.remove('border-red-300', 'focus:ring-red-500', 'border-green-300', 'focus:ring-green-500');
+            }
+        }
+        
+        document.getElementById('password').addEventListener('input', validatePasswordMatch);
+        document.getElementById('confirm_password').addEventListener('input', validatePasswordMatch);
+    </script>
 </body>
 </html>
