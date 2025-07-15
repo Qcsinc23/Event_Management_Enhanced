@@ -24,15 +24,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body class="modern-ui">
-    <!-- Enhanced Modern Header -->
-    <header class="modern-header">
+<body class="modern-ui" role="document">
+    <!-- Enhanced Modern Header with Accessibility -->
+    <header class="modern-header" role="banner">
         <div class="header-container">
             <!-- Left Section: Menu & Brand -->
             <div class="header-left">
                 {% if session.user_id %}
-                <button class="menu-toggle" id="sidebarToggle" aria-label="Toggle navigation menu">
-                    <span class="menu-icon">
+                <button class="menu-toggle" id="sidebarToggle" 
+                        aria-label="Toggle navigation menu" 
+                        aria-controls="sidebar" 
+                        aria-expanded="false"
+                        tabindex="0">
+                    <span class="menu-icon" aria-hidden="true">
                         <span></span>
                         <span></span>
                         <span></span>
@@ -211,21 +215,23 @@
     <!-- Mobile Sidebar Backdrop -->
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Side Navigation -->
+    <!-- Side Navigation with Accessibility -->
     {% if session.user_id %}
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-header">
             <div class="sidebar-app-brand">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
                 <span>QCS Event Management</span>
             </div>
-            <button class="sidebar-close d-md-none" id="sidebarClose">
-                <i class="fas fa-times"></i>
+            <button class="sidebar-close d-md-none" id="sidebarClose" 
+                    aria-label="Close navigation menu"
+                    tabindex="0">
+                <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </div>
         
         <div class="sidebar-content">
-            <ul class="sidebar-nav">
+            <ul class="sidebar-nav" role="menubar">
                 <li class="sidebar-item">
                     <a class="sidebar-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
                         <i class="fas fa-home"></i>
