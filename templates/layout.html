@@ -93,6 +93,9 @@
         </div>
     </header>
 
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- Side Navigation -->
     {% if session.user_id %}
     <nav class="sidebar" id="sidebar">
@@ -334,24 +337,99 @@
                 }
             });
             
-            // Sidebar Toggle
+            // Enhanced Sidebar Toggle with Mobile Support
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.querySelector('.main-content');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
             
+            // Check if we're on mobile
+            function isMobile() {
+                return window.innerWidth <= 768;
+            }
+            
+            // Function to close mobile sidebar
+            function closeMobileSidebar() {
+                sidebar.classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+                if (sidebarBackdrop) {
+                    sidebarBackdrop.classList.remove('show');
+                }
+            }
+            
+            // Function to open mobile sidebar
+            function openMobileSidebar() {
+                sidebar.classList.add('show');
+                document.body.classList.add('sidebar-open');
+                if (sidebarBackdrop) {
+                    sidebarBackdrop.classList.add('show');
+                }
+            }
+            
+            // Handle sidebar toggle
             if (sidebarToggle && sidebar) {
                 sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
+                    if (isMobile()) {
+                        // On mobile, use show/hide with backdrop
+                        if (sidebar.classList.contains('show')) {
+                            closeMobileSidebar();
+                        } else {
+                            openMobileSidebar();
+                        }
+                    } else {
+                        // On desktop, use collapsed state
+                        sidebar.classList.toggle('collapsed');
+                        document.body.classList.toggle('sidebar-collapsed');
+                    }
                 });
                 
                 // Close sidebar on mobile
-                const sidebarClose = document.getElementById('sidebarClose');
                 if (sidebarClose) {
                     sidebarClose.addEventListener('click', function() {
-                        sidebar.classList.add('collapsed');
+                        closeMobileSidebar();
                     });
                 }
+                
+                // Close sidebar when clicking backdrop
+                if (sidebarBackdrop) {
+                    sidebarBackdrop.addEventListener('click', function() {
+                        closeMobileSidebar();
+                    });
+                }
+                
+                // Close sidebar when clicking outside on mobile
+                document.addEventListener('click', function(event) {
+                    if (isMobile() && sidebar.classList.contains('show')) {
+                        if (!sidebar.contains(event.target) && 
+                            event.target !== sidebarToggle &&
+                            !sidebarToggle.contains(event.target) &&
+                            event.target !== sidebarBackdrop) {
+                            closeMobileSidebar();
+                        }
+                    }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    if (!isMobile()) {
+                        // Remove mobile classes when switching to desktop
+                        closeMobileSidebar();
+                        sidebar.classList.remove('collapsed');
+                        document.body.classList.remove('sidebar-collapsed');
+                    } else {
+                        // Remove desktop classes when switching to mobile
+                        sidebar.classList.remove('collapsed');
+                        document.body.classList.remove('sidebar-collapsed');
+                    }
+                });
+                
+                // Handle escape key to close sidebar on mobile
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && isMobile() && sidebar.classList.contains('show')) {
+                        closeMobileSidebar();
+                    }
+                });
             }
             
             // Notifications Panel
