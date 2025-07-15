@@ -525,7 +525,7 @@
                 btn.addEventListener('click', function() {
                     const title = this.getAttribute('data-bs-original-title');
                     if (title === 'Create New Event') {
-                        window.location.href = "{{ url_for('new_event') }}";
+                        window.location.href = "{{ url_for('calendar.new_event') }}";
                     } else if (title === 'View Calendar') {
                         window.location.href = "{{ url_for('calendar.calendar') }}";
                     }
