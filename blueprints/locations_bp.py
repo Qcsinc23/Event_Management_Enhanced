@@ -56,7 +56,7 @@ def new_location():
             )
             db.commit()
             flash('Location created successfully', 'success')
-            return redirect(url_for('locations_bp.locations'))
+            return redirect(url_for('locations.locations'))
             
     return render_template('new_location.html')
 
@@ -123,7 +123,7 @@ def edit_location(location_id):
             )
             db.commit()
             flash('Location updated successfully', 'success')
-            return redirect(url_for('locations_bp.view_location', location_id=location_id))
+            return redirect(url_for('locations.view_location', location_id=location_id))
     
     return render_template('edit_location.html', location=location)
 
@@ -142,13 +142,13 @@ def delete_location(location_id):
     
     if events_count > 0:
         flash(f'Cannot delete this location because it is used in {events_count} events', 'danger')
-        return redirect(url_for('locations_bp.view_location', location_id=location_id))
+        return redirect(url_for('locations.view_location', location_id=location_id))
     
     db.execute('DELETE FROM locations WHERE id = ?', (location_id,))
     db.commit()
     
     flash('Location deleted successfully', 'success')
-    return redirect(url_for('locations_bp.locations'))
+    return redirect(url_for('locations.locations'))
 
 # API Routes
 @locations_bp.route('/api/locations')
