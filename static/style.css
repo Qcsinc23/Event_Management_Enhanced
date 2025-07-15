@@ -209,23 +209,22 @@ body.dark-theme .btn-close { /* Close button color */
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-/* Top Bar */
-/* Top Bar */
+/* Enhanced Top Bar */
 .top-bar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: var(--topbar-height);
-  background-color: var(--white);
-  box-shadow: var(--shadow-md); /* Slightly stronger shadow */
+  background: linear-gradient(135deg, var(--white) 0%, #f8fafc 100%);
+  box-shadow: var(--shadow-md);
   z-index: 1030;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 var(--space-lg);
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-  border-bottom: 1px solid var(--gray-200); /* Add subtle border */
+  transition: all var(--transition-normal);
+  border-bottom: 1px solid var(--gray-200);
 }
 
 .top-bar-left, .top-bar-center, .top-bar-right {
@@ -233,11 +232,23 @@ body.dark-theme .btn-close { /* Close button color */
   align-items: center;
 }
 
-.top-bar-center {
-  flex-grow: 1;
-  justify-content: center;
+.top-bar-left {
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
+.top-bar-center {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+}
+
+.top-bar-right {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Enhanced App Brand with Logo */
 .app-brand {
   display: flex;
   align-items: center;
@@ -246,11 +257,32 @@ body.dark-theme .btn-close { /* Close button color */
   margin-left: var(--space-md);
   letter-spacing: -0.5px;
   font-size: 1.25rem;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.app-brand:hover {
+  color: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
 .app-brand i {
   font-size: 1.5rem;
   margin-right: var(--space-sm);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.2));
+}
+
+.app-brand span {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
 }
 
 .search-container {
@@ -2076,6 +2108,20 @@ body.sidebar-collapsed .main-content {
   margin-left: var(--sidebar-collapsed-width);
 }
 
+/* Enhanced Auth Links Styling */
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.auth-links .btn {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+}
+
 /* Enhanced Mobile Responsive Design */
 
 /* Mobile-first approach for top bar */
@@ -2122,6 +2168,20 @@ body.sidebar-collapsed .main-content {
   .notification-badge {
     font-size: 0.55rem;
     padding: 0.2rem 0.35rem;
+  }
+  
+  /* Mobile auth links adjustments */
+  .auth-links {
+    gap: var(--space-xs);
+  }
+  
+  .auth-links .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .auth-links .me-2 {
+    margin-right: var(--space-xs) !important;
   }
 }
 
@@ -2189,16 +2249,30 @@ body.sidebar-collapsed .main-content {
     --space-md: 0.75rem;
     --space-lg: 1rem;
     --space-xl: 1.25rem;
-    --topbar-height: 56px; /* Standard mobile header height */
+    --topbar-height: 60px; /* Slightly taller for better spacing */
   }
   
   .top-bar {
     padding: 0 var(--space-sm);
     height: var(--topbar-height);
+    gap: var(--space-xs); /* Add gap between sections */
+  }
+  
+  .top-bar-left {
+    flex: 0 0 auto;
+    min-width: 80px; /* Ensure minimum width */
   }
   
   .top-bar-center {
-    flex-grow: 0; /* Don't grow on mobile */
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+  
+  .top-bar-right {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 50%; /* Prevent overflow */
   }
   
   .search-container {
@@ -2208,15 +2282,39 @@ body.sidebar-collapsed .main-content {
   .app-brand {
     font-size: 1rem;
     margin-left: 0;
+    white-space: nowrap;
   }
   
   .top-bar-actions {
-    gap: var(--space-sm);
+    gap: var(--space-xs);
   }
   
   .btn-icon {
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
+  }
+  
+  /* Mobile auth links - prevent overlap */
+  .auth-links {
+    gap: var(--space-xs);
+    flex-wrap: nowrap;
+  }
+  
+  .auth-links .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  
+  .auth-links .btn-outline-primary {
+    display: none; /* Hide sign in button on very small screens */
+  }
+  
+  .sidebar-toggle {
+    padding: var(--space-xs);
+    margin-right: var(--space-xs);
   }
   
   .sidebar {
