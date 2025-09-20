@@ -1462,10 +1462,12 @@ try:
     from blueprints.calendar_bp import calendar_bp
     from blueprints.locations_bp import locations_bp
     from blueprints.tasks_bp import tasks_bp
+    from blueprints.reports_bp import reports_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(calendar_bp)
     app.register_blueprint(locations_bp)
     app.register_blueprint(tasks_bp)
+    app.register_blueprint(reports_bp)
     print("Blueprints registered successfully.")
 except ImportError as e:
     print(f"Warning: Could not import or register blueprints: {e}")

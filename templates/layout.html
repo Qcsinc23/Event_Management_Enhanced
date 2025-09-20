@@ -115,7 +115,7 @@
                         <button class="action-btn notification-btn" id="notificationsToggle" aria-label="View notifications" data-count="{{ header_notification_count }}">
                             <i class="fas fa-bell"></i>
                             {% if header_notification_count > 0 %}
-                            <span class="notification-dot">{{ header_notification_count }}</span>
+                            <span class="notification-indicator">{{ header_notification_count }}</span>
                             {% endif %}
                         </button>
                     </div>
@@ -244,7 +244,14 @@
                         <span>Calendar</span>
                     </a>
                 </li>
-                
+
+                <li class="sidebar-item">
+                    <a class="sidebar-link {% if request.endpoint == 'reports.overview' %}active{% endif %}" href="{{ url_for('reports.overview') }}">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+
                 <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint == 'calendar.invoices' %}active{% endif %}" href="{{ url_for('calendar.invoices') }}">
                         <i class="fas fa-file-invoice-dollar"></i>
@@ -643,7 +650,7 @@
                     const unreadCount = notificationsPanel.querySelectorAll('.notification-item.unread').length;
                     notificationsToggle.dataset.count = unreadCount;
                     if (unreadCount === 0) {
-                        notificationsToggle.querySelectorAll('.notification-dot').forEach(el => el.remove());
+                        notificationsToggle.querySelectorAll('.notification-indicator').forEach(el => el.remove());
                         if (markReadBtn) markReadBtn.disabled = true;
                     }
                 };
