@@ -906,18 +906,40 @@ def api_update_event_dates():
 def api_check_event_conflicts():
     """API endpoint to check for equipment/location conflicts"""
     try:
-        event_id = request.form['event_id']
-        start_date = request.form['start_date']
-        end_date = request.form.get('end_date')
-        
+        if request.is_json:
+            payload = request.get_json(silent=True) or {}
+        else:
+            payload = request.form
+
+        event_id = int(payload.get('event_id') or 0)
+        start_date = (payload.get('start_date') or '').strip()
+        end_date = (payload.get('end_date') or '').strip() or None
+        location_id = payload.get('location_id')
+        location_id = int(location_id) if location_id not in (None, '', 'None') else None
+
+        equipment_ids = payload.get('equipment_ids')
+        if isinstance(equipment_ids, str):
+            equipment_ids = [eid for eid in equipment_ids.split(',') if eid]
+        equipment_ids = [int(eid) for eid in equipment_ids] if equipment_ids else None
+
+        if not start_date:
+            return jsonify({'success': False, 'message': 'start_date is required'}), 400
+
         db = get_db()
-        conflicts = check_event_conflicts(db, event_id, start_date, end_date)
-        
+        conflicts = check_event_conflicts(
+            db,
+            event_id=event_id,
+            start_date=start_date,
+            end_date=end_date,
+            location_id=location_id,
+            equipment_ids=equipment_ids,
+        )
+
         return jsonify({
             'success': True,
             'conflicts': conflicts
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -982,74 +1004,89 @@ def api_location_summary(location_id):
     })
 
 # Helper function to check for event conflicts
-def check_event_conflicts(db, event_id, start_date, end_date=None):
+def check_event_conflicts(db, event_id, start_date, end_date=None, location_id=None, equipment_ids=None):
     """Check for equipment/location conflicts for an event"""
+    event_id = int(event_id or 0)
     if not end_date:
         end_date = start_date
-        
-    # Find events that overlap with the given date range
+
     overlapping_events = db.execute(
-        '''SELECT event_id FROM events 
-           WHERE event_id != ? AND 
-                 (
-                     (event_date BETWEEN ? AND ?) OR
-                     (end_date BETWEEN ? AND ?) OR
-                     (event_date <= ? AND (end_date IS NULL OR end_date >= ?))
-                 ) AND
+        '''SELECT event_id, event_name, event_date, end_date, drop_off_time, pickup_time, status, location_id
+           FROM events
+           WHERE event_id != ? AND
+                 ((event_date BETWEEN ? AND ?) OR
+                  (COALESCE(end_date, event_date) BETWEEN ? AND ?) OR
+                  (event_date <= ? AND (end_date IS NULL OR end_date >= ?))) AND
                  status != 'cancelled' ''',
         (event_id, start_date, end_date, start_date, end_date, start_date, start_date)
     ).fetchall()
-    
+
+    equipment_ids = set(int(eid) for eid in (equipment_ids or []) if eid)
+
+    if not equipment_ids and event_id:
+        event_equipment_rows = db.execute(
+            'SELECT equipment_id FROM equipment_assignments WHERE event_id = ?',
+            (event_id,)
+        ).fetchall()
+        equipment_ids = {row['equipment_id'] for row in event_equipment_rows}
+
+    if location_id is None and event_id:
+        event = db.execute('SELECT location_id FROM events WHERE event_id = ?', (event_id,)).fetchone()
+        location_id = event['location_id'] if event else None
+
     conflicts = []
-    
-    # Check for equipment conflicts
-    # Get equipment assigned to this event
-    event_equipment = db.execute(
-        'SELECT equipment_id FROM equipment_assignments WHERE event_id = ?',
-        (event_id,)
-    ).fetchall()
-    
-    for equipment in event_equipment:
-        equipment_id = equipment['equipment_id']
-        
-        # Check if any overlapping events use this equipment
-        for other_event in overlapping_events:
-            other_id = other_event['event_id']
-            
-            conflict = db.execute(
-                'SELECT 1 FROM equipment_assignments WHERE event_id = ? AND equipment_id = ?',
-                (other_id, equipment_id)
-            ).fetchone()
-            
-            if conflict:
+
+    if equipment_ids and overlapping_events:
+        overlapping_ids = [row['event_id'] for row in overlapping_events]
+        placeholders_events = ','.join('?' for _ in overlapping_ids)
+        placeholders_equipment = ','.join('?' for _ in equipment_ids)
+        rows = db.execute(
+            f'''SELECT event_id, equipment_id FROM equipment_assignments
+                WHERE event_id IN ({placeholders_events})
+                  AND equipment_id IN ({placeholders_equipment})''',
+            overlapping_ids + list(equipment_ids)
+        ).fetchall()
+
+        equipment_conflicts_map = {}
+        for row in rows:
+            equipment_conflicts_map.setdefault(row['event_id'], set()).add(row['equipment_id'])
+
+        for event in overlapping_events:
+            event_conflicts = equipment_conflicts_map.get(event['event_id'])
+            if not event_conflicts:
+                continue
+            for equipment_id in event_conflicts:
                 conflicts.append({
-                    'conflict_event_id': other_id,
+                    'conflict_event_id': event['event_id'],
+                    'conflict_event_name': event['event_name'],
+                    'conflict_event_date': event['event_date'],
                     'conflict_type': 'equipment',
                     'equipment_id': equipment_id
                 })
-    
-    # Check for location conflicts
-    event = db.execute('SELECT location_id FROM events WHERE event_id = ?', (event_id,)).fetchone()
-    
-    if event and event['location_id']:
-        location_id = event['location_id']
-        
-        # Check if any overlapping events use this location
-        for other_event in overlapping_events:
-            other_id = other_event['event_id']
-            
-            conflict = db.execute(
-                'SELECT 1 FROM events WHERE event_id = ? AND location_id = ?',
-                (other_id, location_id)
-            ).fetchone()
-            
-            if conflict:
+
+    if location_id and overlapping_events:
+        for event in overlapping_events:
+            if event['location_id'] == location_id:
                 conflicts.append({
-                    'conflict_event_id': other_id,
+                    'conflict_event_id': event['event_id'],
+                    'conflict_event_name': event['event_name'],
+                    'conflict_event_date': event['event_date'],
                     'conflict_type': 'location',
                     'location_id': location_id
                 })
-    
+
+    equipment_ids_in_conflicts = {c['equipment_id'] for c in conflicts if c.get('equipment_id')}
+    if equipment_ids_in_conflicts:
+        placeholders = ','.join('?' for _ in equipment_ids_in_conflicts)
+        equipment_rows = db.execute(
+            f'SELECT id, name FROM equipment WHERE id IN ({placeholders})',
+            list(equipment_ids_in_conflicts)
+        ).fetchall()
+        equipment_lookup = {row['id']: row['name'] for row in equipment_rows}
+        for conflict in conflicts:
+            if conflict.get('equipment_id'):
+                conflict['equipment_name'] = equipment_lookup.get(conflict['equipment_id'])
+
     return conflicts
 
 # Event routes

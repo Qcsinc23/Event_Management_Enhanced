@@ -71,6 +71,8 @@ function setupEventListeners() {
     
     setupEventFormValidation(document.getElementById('newEventForm'));
     setupEventFormValidation(document.getElementById('editEventForm'));
+    setupConflictChecker(document.getElementById('newEventForm'));
+    setupConflictChecker(document.getElementById('editEventForm'));
     setupLocationInsights(document.getElementById('newEventForm'));
     setupLocationInsights(document.getElementById('editEventForm'));
 }
@@ -245,13 +247,145 @@ function setupLocationInsights(form) {
         }
     };
 
-    locationSelect.addEventListener('change', () => fetchSummary(locationSelect.value));
+    locationSelect.addEventListener('change', () => {
+        fetchSummary(locationSelect.value);
+        if (typeof form.__triggerConflictCheck === 'function') {
+            form.__triggerConflictCheck();
+        }
+    });
 
     if (locationSelect.value) {
         fetchSummary(locationSelect.value);
+        if (typeof form.__triggerConflictCheck === 'function') {
+            form.__triggerConflictCheck();
+        }
     } else {
         hideSummary();
     }
+}
+
+function setupConflictChecker(form) {
+    if (!form) return;
+
+    const locationSelect = form.querySelector('#location_id');
+    const startInput = form.querySelector('#event_date');
+    const endInput = form.querySelector('#end_date');
+    const equipmentChecks = form.querySelectorAll('.equipment-check');
+    const conflictAlert = form.querySelector('#conflictAlerts');
+    if (!startInput || !conflictAlert) return;
+
+    const alertBody = conflictAlert.querySelector('.conflict-alert-body');
+    const eventIdField = form.querySelector('#event_id_field');
+    const csrfField = form.querySelector('input[name="csrf_token"]');
+
+    const hideConflicts = () => {
+        conflictAlert.classList.add('d-none');
+        alertBody.innerHTML = '';
+    };
+
+    const renderConflicts = (conflicts) => {
+        if (!conflicts || !conflicts.length) {
+            hideConflicts();
+            return;
+        }
+
+        const grouped = new Map();
+        conflicts.forEach(conflict => {
+            const key = conflict.conflict_event_id;
+            if (!grouped.has(key)) {
+                grouped.set(key, { event: conflict, equipment: [], hasLocation: false });
+            }
+            const entry = grouped.get(key);
+            if (conflict.conflict_type === 'equipment') {
+                entry.equipment.push(conflict.equipment_name || `Equipment #${conflict.equipment_id}`);
+            }
+            if (conflict.conflict_type === 'location') {
+                entry.hasLocation = true;
+            }
+        });
+
+        const items = Array.from(grouped.values()).map(({ event, equipment, hasLocation }) => {
+            const details = [];
+            if (equipment.length) {
+                details.push(`<strong>Equipment:</strong> ${equipment.join(', ')}`);
+            }
+            if (hasLocation) {
+                details.push('<strong>Location:</strong> Same venue booked');
+            }
+            const eventLink = event.conflict_event_id ? `<a href="/events/${event.conflict_event_id}" class="text-white text-decoration-underline" target="_blank">View event</a>` : '';
+            return `
+                <li class="mb-2">
+                    <div><strong>${event.conflict_event_name || 'Event #' + event.conflict_event_id}</strong> &mdash; ${event.conflict_event_date || 'Date N/A'}</div>
+                    <div>${details.join(' · ')}</div>
+                    ${eventLink}
+                </li>`;
+        });
+
+        alertBody.innerHTML = `<ul class="mb-0 ps-3">${items.join('')}</ul>`;
+        conflictAlert.classList.remove('d-none');
+    };
+
+    const fetchConflicts = async () => {
+        const startDate = startInput.value ? startInput.value.trim() : '';
+        if (!startDate) {
+            hideConflicts();
+            return;
+        }
+
+        const payload = {
+            event_id: eventIdField && eventIdField.value ? parseInt(eventIdField.value, 10) : 0,
+            start_date: startDate,
+            end_date: endInput && endInput.value ? endInput.value.trim() : '',
+            location_id: locationSelect && locationSelect.value ? parseInt(locationSelect.value, 10) : null,
+            equipment_ids: Array.from(form.querySelectorAll('.equipment-check:checked')).map(cb => parseInt(cb.value, 10))
+        };
+
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (csrfField && csrfField.value) {
+                headers['X-CSRFToken'] = csrfField.value;
+            }
+
+            const response = await fetch('/api/events/check_conflicts', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Unable to check conflicts');
+            }
+
+            renderConflicts(data.conflicts || []);
+        } catch (err) {
+            alertBody.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle me-2"></i>${err.message}</div>`;
+            conflictAlert.classList.remove('d-none');
+        }
+    };
+
+    const debounce = (fn, delay = 400) => {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(null, args), delay);
+        };
+    };
+
+    const debouncedFetch = debounce(fetchConflicts, 300);
+
+    if (startInput) startInput.addEventListener('change', debouncedFetch);
+    if (endInput) endInput.addEventListener('change', debouncedFetch);
+    if (locationSelect) locationSelect.addEventListener('change', debouncedFetch);
+    if (equipmentChecks.length) {
+        equipmentChecks.forEach(cb => cb.addEventListener('change', debouncedFetch));
+    }
+
+    form.__triggerConflictCheck = fetchConflicts;
+    fetchConflicts();
 }
 
 // Helper function to format time (HH:MM)
