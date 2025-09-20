@@ -1,5 +1,5 @@
 """Notification generation for dashboard and header alerts."""
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from flask import url_for
 
 SEVERITY_PRIORITY = {
@@ -10,14 +10,19 @@ SEVERITY_PRIORITY = {
 }
 
 
-def _relative_time(date_str, date_obj=None):
-    if not date_str:
+def _relative_time(date_value, date_obj=None):
+    if not date_value:
         return ""
     base = date_obj or datetime.now()
     try:
-        target = datetime.strptime(date_str, '%Y-%m-%d')
+        if isinstance(date_value, datetime):
+            target = date_value
+        elif isinstance(date_value, date):
+            target = datetime.combine(date_value, datetime.min.time())
+        else:
+            target = datetime.strptime(str(date_value), '%Y-%m-%d')
     except ValueError:
-        return date_str
+        return str(date_value)
     delta = target.date() - base.date()
     days = delta.days
     if days == 0:
@@ -58,10 +63,12 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
             'link': url_for('tasks.event_tasks', event_id=row['event_id']),
             'category': 'tasks',
             'meta': row['event_name'],
-            'timestamp': row['due_date'] + ' 00:00:00',
+            'timestamp': f"{row['due_date']} 00:00:00",
         })
 
     # Tasks due soon (next 3 days)
+    upcoming_start = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+    upcoming_end = (today + timedelta(days=3)).strftime('%Y-%m-%d')
     soon_rows = db.execute(
         '''SELECT t.id, t.description, t.due_date, e.event_name, e.event_id
            FROM event_tasks t
@@ -69,7 +76,7 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
            WHERE t.status != 'completed' AND t.due_date IS NOT NULL
              AND t.due_date BETWEEN ? AND ?
            ORDER BY t.due_date ASC LIMIT 5''',
-        (today.strftime('%Y-%m-%d'), (today + timedelta(days=3)).strftime('%Y-%m-%d'))
+        (upcoming_start, upcoming_end)
     ).fetchall()
     for row in soon_rows:
         notif_id = f"task-upcoming-{row['id']}"
@@ -82,7 +89,7 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
             'link': url_for('tasks.event_tasks', event_id=row['event_id']),
             'category': 'tasks',
             'meta': row['event_name'],
-            'timestamp': row['due_date'] + ' 00:00:00',
+            'timestamp': f"{row['due_date']} 00:00:00",
         })
 
     # Low stock equipment/elements
@@ -100,7 +107,7 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
             'title': 'Low Stock Alert',
             'description': f"{row['item_description']} has only {row['quantity']} left",
             'time': 'Needs restock',
-            'severity': 'warning',
+            'severity': 'info',
             'link': url_for('elements'),
             'category': 'inventory',
             'meta': row['type_name'],

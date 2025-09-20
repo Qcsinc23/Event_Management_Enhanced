@@ -1,0 +1,320 @@
+{% extends 'layout.html' %}
+
+{% block title %}Reports & Analytics - QCS Event Management{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+<li class="breadcrumb-item active">Reports</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Reports &amp; Analytics</h1>
+        <p class="text-muted mb-0">Understand performance across clients, revenue, and inventory utilisation.</p>
+    </div>
+    <form class="reports-filter" method="get" action="{{ url_for('reports.overview') }}">
+        <div class="btn-group" role="group" aria-label="Preset date filters">
+            {% set presets = [
+                ('30', '30D'),
+                ('90', '90D'),
+                ('180', '6M'),
+                ('365', '12M'),
+                ('ytd', 'YTD'),
+                ('all', 'All')
+            ] %}
+            {% for key, label in presets %}
+            <button type="submit" name="range" value="{{ key }}" class="btn btn-outline-primary {% if active_range == key %}active{% endif %}">
+                {{ label }}
+            </button>
+            {% endfor %}
+        </div>
+        <div class="input-group ms-2 reports-date-picker">
+            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+            <input type="date" class="form-control" name="start" value="{{ filters.start }}" aria-label="Start date">
+            <span class="input-group-text">to</span>
+            <input type="date" class="form-control" name="end" value="{{ filters.end }}" aria-label="End date">
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+{% if not has_data %}
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="fas fa-info-circle fa-lg me-3"></i>
+    <div>
+        <strong>No activity recorded for the selected range.</strong> Capture events, invoices, or equipment assignments to unlock reporting insights.
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="report-card">
+            <div class="report-card-icon bg-primary text-white"><i class="fas fa-dollar-sign"></i></div>
+            <div class="report-card-content">
+                <span class="report-card-label">Total Invoiced</span>
+                <span class="report-card-value">${{ '%.2f'|format(summary.total_revenue) }}</span>
+                <small class="text-muted">Across invoices issued in range</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="report-card">
+            <div class="report-card-icon bg-success text-white"><i class="fas fa-check-circle"></i></div>
+            <div class="report-card-content">
+                <span class="report-card-label">Collected</span>
+                <span class="report-card-value">${{ '%.2f'|format(summary.paid_revenue) }}</span>
+                <small class="text-muted">{{ summary.collection_rate }}% collection rate</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="report-card">
+            <div class="report-card-icon bg-warning text-white"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="report-card-content">
+                <span class="report-card-label">Outstanding</span>
+                <span class="report-card-value">${{ '%.2f'|format(summary.outstanding) }}</span>
+                <small class="text-muted">Follow up on overdue balances</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="report-card">
+            <div class="report-card-icon bg-info text-white"><i class="fas fa-user-tie"></i></div>
+            <div class="report-card-content">
+                <span class="report-card-label">Top Client</span>
+                {% if summary.top_client %}
+                <span class="report-card-value">{{ summary.top_client }}</span>
+                <small class="text-muted">${{ '%.2f'|format(summary.top_client_value) }} invoiced</small>
+                {% else %}
+                <span class="report-card-value text-muted">No data</span>
+                <small class="text-muted">Create invoices to populate</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Revenue Trend</h5>
+                    <small class="text-muted">Monthly totals for the selected period</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueTrendChart" height="180" aria-label="Revenue trend chart" role="img"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Event Category Mix</h5>
+                    <small class="text-muted">Share of events by type</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryMixChart" height="220" aria-label="Event category mix" role="img"></canvas>
+                {% if not category_mix %}
+                <p class="text-muted text-center mt-4">No events recorded during this period.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Client Profitability</h5>
+                    <small class="text-muted">Top performing clients by invoice volume</small>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Client</th>
+                            <th scope="col" class="text-end">Total</th>
+                            <th scope="col" class="text-end">Collected</th>
+                            <th scope="col" class="text-end">Outstanding</th>
+                            <th scope="col" class="text-end">Collection</th>
+                            <th scope="col" class="text-end">Invoices</th>
+                            <th scope="col" class="text-end">Events</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if client_rows %}
+                        {% for row in client_rows %}
+                        <tr>
+                            <td>
+                                <strong>{{ row.client_name }}</strong><br>
+                                <small class="text-muted">Last invoice: {{ row.last_invoice_date or '—' }}</small>
+                            </td>
+                            <td class="text-end">${{ '%.2f'|format(row.total_invoiced) }}</td>
+                            <td class="text-end">${{ '%.2f'|format(row.paid_total) }}</td>
+                            <td class="text-end">${{ '%.2f'|format(row.outstanding_total) }}</td>
+                            <td class="text-end">{{ row.collection_rate }}%</td>
+                            <td class="text-end">{{ row.invoice_count }}</td>
+                            <td class="text-end">{{ row.event_count }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No invoices issued in this period.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Equipment Utilisation</h5>
+                    <small class="text-muted">Most frequently assigned inventory</small>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Equipment</th>
+                            <th scope="col" class="text-end">Events</th>
+                            <th scope="col" class="text-end">Qty Used</th>
+                            <th scope="col" class="text-end">Avg / Event</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if equipment_rows %}
+                        {% for row in equipment_rows %}
+                        <tr>
+                            <td>
+                                <strong>{{ row.equipment_name }}</strong><br>
+                                <small class="text-muted">Cap: {{ row.available_quantity }} • {{ row.capacity_ratio }}% avg load</small>
+                            </td>
+                            <td class="text-end">{{ row.event_count }}</td>
+                            <td class="text-end">{{ row.total_quantity }}</td>
+                            <td class="text-end">{{ '%.2f'|format(row.average_quantity) }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No equipment assignments recorded.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+(function() {
+    const revenueData = {{ revenue_trend|tojson }};
+    const categoryData = {{ category_mix|tojson }};
+
+    const revenueCtx = document.getElementById('revenueTrendChart');
+    if (revenueCtx && revenueData.length) {
+        const labels = revenueData.map(row => row.period);
+        const totals = revenueData.map(row => row.total_amount);
+        const paid = revenueData.map(row => row.paid_amount);
+
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Total Invoiced',
+                        data: totals,
+                        fill: false,
+                        tension: 0.35,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.15)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'Collected',
+                        data: paid,
+                        fill: false,
+                        tension: 0.35,
+                        borderColor: '#2dc653',
+                        backgroundColor: 'rgba(45, 198, 83, 0.15)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: value => `$${value}`
+                        }
+                    }
+                }
+            }
+        });
+    } else if (revenueCtx) {
+        revenueCtx.parentElement.innerHTML = '<p class="text-muted text-center my-4">No invoices issued for this range.</p>';
+    }
+
+    const categoryCtx = document.getElementById('categoryMixChart');
+    if (categoryCtx && categoryData.length) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.map(row => row.category_name || 'Uncategorised'),
+                datasets: [{
+                    data: categoryData.map(row => row.event_count),
+                    backgroundColor: ['#4361ee', '#3a86ff', '#ff006e', '#ffbe0b', '#2dc653', '#8338ec', '#fb5607'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}
