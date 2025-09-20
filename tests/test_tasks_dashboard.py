@@ -39,6 +39,7 @@ class TaskDashboardTestCase(unittest.TestCase):
             due_tomorrow = (self.today + timedelta(days=1)).strftime('%Y-%m-%d')
             overdue = (self.today - timedelta(days=1)).strftime('%Y-%m-%d')
 
+            task_ids = {}
             tasks = [
                 ('Prepare materials', due_today, 'pending'),
                 ('Confirm logistics', due_tomorrow, 'in_progress'),
@@ -51,6 +52,14 @@ class TaskDashboardTestCase(unittest.TestCase):
                     (event_id, desc, due, status, 1 if status == 'completed' else 0)
                 )
             db.commit()
+
+            rows = db.execute('SELECT id, description FROM event_tasks WHERE event_id = ?', (event_id,)).fetchall()
+            for row in rows:
+                if row['description'] == 'Archive photos':
+                    task_ids['overdue'] = row['id']
+                elif row['description'] == 'Confirm logistics':
+                    task_ids['upcoming'] = row['id']
+            self.cleanup_ids['task_ids'] = task_ids
 
     def tearDown(self):
         with app.app_context():
@@ -87,6 +96,28 @@ class TaskDashboardTestCase(unittest.TestCase):
         self.assertTrue(payload['success'])
         self.assertIn('summary', payload)
         self.assertGreaterEqual(payload['summary']['completed'], 1)
+
+    def test_notifications_panel_and_ack(self):
+        resp = self.client.get('/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'Notifications', resp.data)
+        self.assertIn(b'notification-item', resp.data)
+
+        task_ids = self.cleanup_ids.get('task_ids', {})
+        ids_to_ack = []
+        if 'overdue' in task_ids:
+            ids_to_ack.append(f"task-overdue-{task_ids['overdue']}")
+        if 'upcoming' in task_ids:
+            ids_to_ack.append(f"task-upcoming-{task_ids['upcoming']}")
+
+        ack_resp = self.client.post(
+            '/notifications/ack',
+            json={'ids': ids_to_ack},
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        )
+        self.assertEqual(ack_resp.status_code, 200)
+        follow_resp = self.client.get('/')
+        self.assertNotIn(b'notification-dot', follow_resp.data)
 
 
 if __name__ == '__main__':

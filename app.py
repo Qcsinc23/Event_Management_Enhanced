@@ -38,6 +38,7 @@ app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour CSRF token validity
 
 # Import helper functions
 from helpers import get_db, close_db, login_required, role_required, get_current_user
+from services.notifications_service import fetch_notifications
 
 # Database initialization function (uses get_db)
 def init_db():
@@ -59,6 +60,31 @@ def init_db_command():
 
 # Register close_db with the application
 app.teardown_appcontext(close_db)
+
+# Notifications hooks
+@app.before_request
+def load_notifications():
+    if 'user_id' not in session:
+        from flask import g
+        g.notifications = []
+        return
+
+    db = get_db()
+    dismissed = set(session.get('dismissed_notifications', []))
+    notifications = fetch_notifications(db, dismissed_ids=dismissed)
+    from flask import g
+    g.notifications = notifications
+
+
+@app.context_processor
+def inject_global_notifications():
+    from flask import g
+    notifications = getattr(g, 'notifications', [])
+    unread_count = sum(1 for n in notifications if n.get('severity') in ('danger', 'warning'))
+    return {
+        'header_notifications': notifications,
+        'header_notification_count': unread_count,
+    }
 
 # Routes (These use the imported helpers)
 @app.route('/landing')
@@ -153,6 +179,21 @@ def index():
         upcoming_tasks=upcoming_tasks,
         equipment_utilization=equipment_utilization,
     )
+
+
+@app.route('/notifications/ack', methods=['POST'])
+@login_required
+def acknowledge_notifications():
+    payload = request.get_json(silent=True) or {}
+    ids = payload.get('ids', [])
+    if not isinstance(ids, list):
+        return jsonify({'success': False, 'message': 'Invalid payload'}), 400
+
+    dismissed = set(session.get('dismissed_notifications', []))
+    dismissed.update(str(i) for i in ids)
+    session['dismissed_notifications'] = list(dismissed)
+    session.modified = True
+    return jsonify({'success': True})
 
 # Client Management Routes
 @app.route('/clients')

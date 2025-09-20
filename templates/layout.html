@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if session.user_id %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% endif %}
     <title>{% block title %}QCS Event Management{% endblock %}</title>
     
     <!-- Favicon -->
@@ -109,9 +112,11 @@
                     
                     <!-- Notifications -->
                     <div class="notification-wrapper">
-                        <button class="action-btn notification-btn" id="notificationsToggle" aria-label="View notifications">
+                        <button class="action-btn notification-btn" id="notificationsToggle" aria-label="View notifications" data-count="{{ header_notification_count }}">
                             <i class="fas fa-bell"></i>
-                            <span class="notification-dot"></span>
+                            {% if header_notification_count > 0 %}
+                            <span class="notification-dot">{{ header_notification_count }}</span>
+                            {% endif %}
                         </button>
                     </div>
                     
@@ -325,62 +330,64 @@
     {% endif %}
 
     <!-- Notifications Sidebar -->
-    <div class="notifications-panel" id="notificationsPanel">
+    <div class="notifications-panel" id="notificationsPanel" data-ack-url="{{ url_for('acknowledge_notifications') }}">
         <div class="notifications-header">
-            <h5>Notifications</h5>
-            <button class="close-notifications" id="closeNotifications">
-                <i class="fas fa-times"></i>
-            </button>
+            <div>
+                <h5 class="mb-0">Notifications</h5>
+                <small class="text-muted">Stay on top of important changes</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary" id="markNotificationsRead" {% if header_notification_count == 0 %}disabled{% endif %}>
+                    <i class="fas fa-check me-1"></i>Mark all as read
+                </button>
+                <button class="close-notifications" id="closeNotifications" aria-label="Close notifications panel">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
         <div class="notifications-content">
-            <div class="notification-item unread">
-                <div class="notification-icon bg-primary">
-                    <i class="fas fa-calendar-plus"></i>
+            {% if header_notifications %}
+                {% for notification in header_notifications %}
+                <div class="notification-item {{ 'unread' if notification.severity in ['danger', 'warning'] else '' }}" data-notification-id="{{ notification.id }}">
+                    <div class="notification-icon bg-{{ 'danger' if notification.severity == 'danger' else 'warning' if notification.severity == 'warning' else 'info' }}">
+                        {% if notification.category == 'tasks' %}
+                        <i class="fas fa-clipboard-check"></i>
+                        {% elif notification.category == 'inventory' %}
+                        <i class="fas fa-box"></i>
+                        {% elif notification.category == 'events' %}
+                        <i class="fas fa-calendar-check"></i>
+                        {% else %}
+                        <i class="fas fa-bell"></i>
+                        {% endif %}
+                    </div>
+                    <div class="notification-details">
+                        <div class="notification-title">{{ notification.title }}</div>
+                        <div class="notification-desc">{{ notification.description }}</div>
+                        <div class="notification-meta text-muted small">
+                            {% if notification.meta %}
+                            <span class="me-2"><i class="fas fa-tag me-1"></i>{{ notification.meta }}</span>
+                            {% endif %}
+                            <span><i class="fas fa-clock me-1"></i>{{ notification.time }}</span>
+                        </div>
+                    </div>
+                    {% if notification.link %}
+                    <div class="notification-actions">
+                        <a class="btn-icon" href="{{ notification.link }}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="notification-details">
-                    <div class="notification-title">New Event Created</div>
-                    <div class="notification-desc">Corporate Event for Horizon scheduled for June 15</div>
-                    <div class="notification-time">2 hours ago</div>
-                </div>
-                <div class="notification-actions">
-                    <button class="btn-icon">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
+                {% endfor %}
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                <p class="mb-0">You're all caught up! No notifications at this time.</p>
             </div>
-            <div class="notification-item unread">
-                <div class="notification-icon bg-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="notification-details">
-                    <div class="notification-title">Low Stock Alert</div>
-                    <div class="notification-desc">Projector type elements below threshold (2 remaining)</div>
-                    <div class="notification-time">5 hours ago</div>
-                </div>
-                <div class="notification-actions">
-                    <button class="btn-icon">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="notification-item">
-                <div class="notification-icon bg-success">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="notification-details">
-                    <div class="notification-title">Event Completed</div>
-                    <div class="notification-desc">RWJ Charity Gala completed successfully</div>
-                    <div class="notification-time">Yesterday</div>
-                </div>
-                <div class="notification-actions">
-                    <button class="btn-icon">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
+            {% endif %}
         </div>
         <div class="notifications-footer">
-            <a href="#" class="view-all">View All Notifications</a>
+            <a href="{{ url_for('index') }}" class="view-all">Refresh dashboard</a>
         </div>
     </div>
 
@@ -627,24 +634,69 @@
             const closeNotifications = document.getElementById('closeNotifications');
             
             if (notificationsToggle && notificationsPanel) {
+                const markReadBtn = document.getElementById('markNotificationsRead');
+                const ackUrl = notificationsPanel.dataset.ackUrl;
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+                const updateBadge = () => {
+                    const unreadCount = notificationsPanel.querySelectorAll('.notification-item.unread').length;
+                    notificationsToggle.dataset.count = unreadCount;
+                    if (unreadCount === 0) {
+                        notificationsToggle.querySelectorAll('.notification-dot').forEach(el => el.remove());
+                        if (markReadBtn) markReadBtn.disabled = true;
+                    }
+                };
+
+                const markNotificationsRead = async () => {
+                    const unreadItems = notificationsPanel.querySelectorAll('.notification-item.unread');
+                    if (!unreadItems.length || !ackUrl) return;
+                    const ids = Array.from(unreadItems).map(item => item.dataset.notificationId);
+                    try {
+                        await fetch(ackUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
+                            },
+                            body: JSON.stringify({ ids })
+                        });
+                        unreadItems.forEach(item => item.classList.remove('unread'));
+                        updateBadge();
+                    } catch (error) {
+                        console.error('Failed to acknowledge notifications', error);
+                    }
+                };
+
                 notificationsToggle.addEventListener('click', function() {
                     notificationsPanel.classList.toggle('show');
+                    if (notificationsPanel.classList.contains('show')) {
+                        markNotificationsRead();
+                    }
                 });
-                
+
+                if (markReadBtn) {
+                    markReadBtn.addEventListener('click', function() {
+                        markNotificationsRead();
+                    });
+                }
+
                 if (closeNotifications) {
                     closeNotifications.addEventListener('click', function() {
                         notificationsPanel.classList.remove('show');
                     });
                 }
-                
-                // Close when clicking outside
+
                 document.addEventListener('click', function(event) {
-                    if (!notificationsPanel.contains(event.target) && 
+                    if (!notificationsPanel.contains(event.target) &&
                         event.target !== notificationsToggle &&
                         !notificationsToggle.contains(event.target)) {
                         notificationsPanel.classList.remove('show');
                     }
                 });
+
+                updateBadge();
             }
         });
     </script>
