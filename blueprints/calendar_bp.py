@@ -921,6 +921,66 @@ def api_check_event_conflicts():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@calendar_bp.route('/api/locations/<int:location_id>/summary')
+@login_required
+def api_location_summary(location_id):
+    """Return basic details and upcoming events for a location."""
+    db = get_db()
+    location = db.execute(
+        '''SELECT id, name, address, city, state, zip_code, phone, email, website, notes
+           FROM locations WHERE id = ? AND is_active = 1''',
+        (location_id,)
+    ).fetchone()
+
+    if not location:
+        return jsonify({'success': False, 'message': 'Location not found or inactive.'}), 404
+
+    exclude_event_id = request.args.get('exclude_event_id', type=int)
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    params = [location_id, today]
+    query = (
+        """SELECT event_id, event_name, event_date, drop_off_time, pickup_time, status
+            FROM events
+            WHERE location_id = ? AND event_date >= ? AND status != 'cancelled'"""
+    )
+
+    if exclude_event_id:
+        query += ' AND event_id != ?'
+        params.append(exclude_event_id)
+
+    query += ' ORDER BY event_date ASC LIMIT 5'
+
+    upcoming_events = db.execute(query, params).fetchall()
+
+    return jsonify({
+        'success': True,
+        'location': {
+            'id': location['id'],
+            'name': location['name'],
+            'address': location['address'],
+            'city': location['city'],
+            'state': location['state'],
+            'zip_code': location['zip_code'],
+            'phone': location['phone'],
+            'email': location['email'],
+            'website': location['website'],
+            'notes': location['notes'],
+        },
+        'upcoming_events': [
+            {
+                'event_id': ev['event_id'],
+                'event_name': ev['event_name'],
+                'event_date': ev['event_date'],
+                'drop_off_time': ev['drop_off_time'],
+                'pickup_time': ev['pickup_time'],
+                'status': ev['status'],
+            }
+            for ev in upcoming_events
+        ]
+    })
+
 # Helper function to check for event conflicts
 def check_event_conflicts(db, event_id, start_date, end_date=None):
     """Check for equipment/location conflicts for an event"""
