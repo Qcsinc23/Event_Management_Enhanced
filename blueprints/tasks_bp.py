@@ -86,7 +86,7 @@ def add_event_task(event_id):
         db.commit()
         flash('Task added successfully', 'success')
     
-    return redirect(url_for('tasks_bp.event_tasks', event_id=event_id))
+    return redirect(url_for('tasks.event_tasks', event_id=event_id))
 
 @tasks_bp.route('/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required
@@ -113,7 +113,7 @@ def complete_task(task_id):
         return jsonify({'success': True, 'is_completed': is_completed})
     
     # Otherwise redirect back to tasks page
-    return redirect(url_for('tasks_bp.event_tasks', event_id=task['event_id']))
+    return redirect(url_for('tasks.event_tasks', event_id=task['event_id']))
 
 @tasks_bp.route('/tasks/<int:task_id>/edit', methods=['POST'])
 @login_required
@@ -146,7 +146,7 @@ def edit_task(task_id):
         db.commit()
         flash('Task updated successfully', 'success')
     
-    return redirect(url_for('tasks_bp.event_tasks', event_id=task['event_id']))
+    return redirect(url_for('tasks.event_tasks', event_id=task['event_id']))
 
 @tasks_bp.route('/tasks/<int:task_id>/delete', methods=['POST'])
 @login_required
@@ -165,7 +165,7 @@ def delete_task(task_id):
     db.commit()
     
     flash('Task deleted successfully', 'success')
-    return redirect(url_for('tasks_bp.event_tasks', event_id=event_id))
+    return redirect(url_for('tasks.event_tasks', event_id=event_id))
 
 # API endpoint to get tasks for an event
 @tasks_bp.route('/api/events/<int:event_id>/tasks')

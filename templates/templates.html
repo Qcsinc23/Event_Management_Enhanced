@@ -125,7 +125,7 @@
                 </div>
                 <div class="card-footer bg-light">
                     <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('new_event') }}?template_id={{ template.id }}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{{ url_for('calendar.new_event') }}?template_id={{ template.id }}" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-calendar-plus me-1"></i>Use Template
                         </a>
                         {% if 'admin' in session.role or 'staff' in session.role %}

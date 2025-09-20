@@ -290,12 +290,12 @@ def import_calendar():
             # Import from uploaded file
             if 'ics_file' not in request.files:
                 flash('No file selected', 'danger')
-                return redirect(url_for('calendar_bp.calendar'))
+                return redirect(url_for('calendar.calendar'))
             
             file = request.files['ics_file']
             if file.filename == '':
                 flash('No file selected', 'danger')
-                return redirect(url_for('calendar_bp.calendar'))
+                return redirect(url_for('calendar.calendar'))
             
             # Parse ICS file
             ics_content = file.read().decode('utf-8')
@@ -471,13 +471,13 @@ def import_calendar():
             ics_url = request.form.get('ics_url')
             if not ics_url:
                 flash('URL is required', 'danger')
-                return redirect(url_for('calendar_bp.calendar'))
+                return redirect(url_for('calendar.calendar'))
             
             # Fetch ICS content from URL
             response = requests.get(ics_url)
             if response.status_code != 200:
                 flash(f'Failed to fetch ICS: {response.status_code}', 'danger')
-                return redirect(url_for('calendar_bp.calendar'))
+                return redirect(url_for('calendar.calendar'))
             
             # Parse ICS content
             calendar = ics.Calendar(response.text)
@@ -493,14 +493,14 @@ def import_calendar():
         
         if not calendar:
             flash('Invalid calendar data', 'danger')
-            return redirect(url_for('calendar_bp.calendar'))
+            return redirect(url_for('calendar.calendar'))
         
         # Get default client for imported events
         db = get_db()
         default_client = db.execute('SELECT id FROM clients LIMIT 1').fetchone()
         if not default_client:
             flash('No clients available to assign events to', 'danger')
-            return redirect(url_for('calendar_bp.calendar'))
+            return redirect(url_for('calendar.calendar'))
         
         # Process the calendar events
         imported_count = 0
@@ -584,11 +584,11 @@ def import_calendar():
         
         db.commit()
         flash(f'Successfully imported {imported_count} events', 'success')
-        return redirect(url_for('calendar_bp.calendar'))
+        return redirect(url_for('calendar.calendar'))
         
     except Exception as e:
         flash(f'Error importing calendar: {str(e)}', 'danger')
-        return redirect(url_for('calendar_bp.calendar'))
+        return redirect(url_for('calendar.calendar'))
 
 # API endpoint to get all events for the calendar
 @calendar_bp.route('/api/events')
@@ -1005,12 +1005,27 @@ def new_event():
         event_date = request.form['event_date']
         drop_off_time = request.form['drop_off_time']
         pick_up_time = request.form['pickup_time']
-        # Get location from either location_id or event_location
-        location_id = request.form.get('location_id')
-        event_location = request.form.get('event_location', '')
-        
-        # Use event_location if provided, otherwise use empty string
+        location_id_raw = request.form.get('location_id', '').strip()
+        event_location = request.form.get('event_location', '').strip()
+
+        location_id = None
+        if location_id_raw:
+            try:
+                location_id = int(location_id_raw)
+            except ValueError:
+                location_id = None
+
         location = event_location
+        if location_id and not location:
+            location_row = db.execute(
+                'SELECT name, address FROM locations WHERE id = ?',
+                (location_id,)
+            ).fetchone()
+            if location_row:
+                address = (location_row['address'] or '').strip()
+                location = location_row['name'].strip()
+                if address:
+                    location = f"{location} - {address}"
         status = request.form.get('status', 'booked')
         notes = request.form.get('notes', '')
         template_id = request.form.get('template_id') or None
@@ -1066,10 +1081,10 @@ def new_event():
             cursor = db.execute(
                 '''INSERT INTO events 
                    (event_name, client_id, category_id, event_date, drop_off_time, 
-                    pickup_time, event_location, status, notes, template_id) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    pickup_time, event_location, location_id, status, notes, template_id) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                 (title, client_id, category_id, event_date, drop_off_time, 
-                 pick_up_time, location, status, notes, template_id)
+                 pick_up_time, location, location_id, status, notes, template_id)
             )
             event_id = cursor.lastrowid
             
@@ -1125,6 +1140,10 @@ def new_event():
            ORDER BY e.name'''
     ).fetchall()
     
+    locations = db.execute(
+        'SELECT * FROM locations WHERE is_active = 1 ORDER BY name'
+    ).fetchall()
+    
     # Pre-select client if passed in query param
     selected_client = request.args.get('client_id')
     
@@ -1134,6 +1153,7 @@ def new_event():
         categories=categories,
         templates=templates,
         equipment=equipment_list,
+        locations=locations,
         selected_client=selected_client
     )
 
@@ -1178,13 +1198,34 @@ def edit_event(event_id):
         abort(404)
     
     if request.method == 'POST':
-        event_name = request.form['title']  # Form still uses 'title'
+        event_name = request.form.get('title') or request.form.get('event_name')
+        if event_name:
+            event_name = event_name.strip()
         client_id = request.form['client_id']
         event_date = request.form['event_date']
-        drop_off_time = request.form['drop_off_time']
-        pickup_time = request.form['pick_up_time']  # Form uses 'pick_up_time', but DB uses 'pickup_time'
-        event_location = request.form['location']  # Form uses 'location', but DB uses 'event_location'
+        drop_off_time = request.form.get('drop_off_time')
+        pickup_time = request.form.get('pick_up_time') or request.form.get('pickup_time')
+        event_location = (request.form.get('location') or request.form.get('event_location', '')).strip()
         status = request.form['status']
+        location_id_raw = request.form.get('location_id', '').strip()
+
+        location_id = None
+        if location_id_raw:
+            try:
+                location_id = int(location_id_raw)
+            except ValueError:
+                location_id = None
+
+        if location_id and not event_location:
+            location_row = db.execute(
+                'SELECT name, address FROM locations WHERE id = ?',
+                (location_id,)
+            ).fetchone()
+            if location_row:
+                address = (location_row['address'] or '').strip()
+                event_location = location_row['name'].strip()
+                if address:
+                    event_location = f"{event_location} - {address}"
         
         # Get equipment selections from form
         equipment_ids = request.form.getlist('equipment_ids')
@@ -1212,8 +1253,8 @@ def edit_event(event_id):
         else:
             db.execute(
                 'UPDATE events SET event_name = ?, client_id = ?, event_date = ?, drop_off_time = ?, '
-                'pickup_time = ?, event_location = ?, status = ? WHERE event_id = ?',
-                (event_name, client_id, event_date, drop_off_time, pickup_time, event_location, status, event_id)
+                'pickup_time = ?, event_location = ?, location_id = ?, status = ? WHERE event_id = ?',
+                (event_name, client_id, event_date, drop_off_time, pickup_time, event_location, location_id, status, event_id)
             )
             
             # Update equipment assignments
@@ -1271,6 +1312,10 @@ def edit_event(event_id):
     # Get clients for the dropdown
     clients = db.execute('SELECT * FROM clients').fetchall()
     
+    locations = db.execute(
+        'SELECT * FROM locations WHERE is_active = 1 ORDER BY name'
+    ).fetchall()
+    
     # Get equipment with availability info
     equipment = db.execute(
         '''SELECT e.*,
@@ -1305,7 +1350,7 @@ def edit_event(event_id):
         
         equipment_list.append(equipment_item)
     
-    return render_template('edit_event.html', event=event, clients=clients, equipment=equipment_list)
+    return render_template('edit_event.html', event=event, clients=clients, locations=locations, equipment=equipment_list)
 
 @calendar_bp.route('/events/<int:event_id>/delete', methods=['POST'])
 @login_required
