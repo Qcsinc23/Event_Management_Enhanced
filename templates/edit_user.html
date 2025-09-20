@@ -18,44 +18,69 @@
             </div>
             <div class="card-body">
                 <form method="post">
+                    {{ form.hidden_tag() }}
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="username" class="form-label">Username*</label>
-                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                            <input type="text" class="form-control" id="username" name="{{ form.username.name }}" value="{{ form.username.data }}" required>
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors[0] }}</div>
+                            {% endif %}
                         </div>
                         
                         <div class="col-md-6">
                             <label for="full_name" class="form-label">Full Name*</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name }}" required>
+                            <input type="text" class="form-control" id="full_name" name="{{ form.full_name.name }}" value="{{ form.full_name.data }}" required>
+                            {% if form.full_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.full_name.errors[0] }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address*</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        <input type="email" class="form-control" id="email" name="{{ form.email.name }}" value="{{ form.email.data }}" required>
+                        {% if form.email.errors %}
+                        <div class="text-danger small mt-1">{{ form.email.errors[0] }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="new_password" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="new_password" name="new_password">
+                            <input type="password" class="form-control" id="new_password" name="{{ form.new_password.name }}">
                             <div class="form-text">Leave blank to keep current password</div>
+                            {% if form.new_password.errors %}
+                            <div class="text-danger small mt-1">{{ form.new_password.errors[0] }}</div>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6">
-                            <label for="role" class="form-label">Role*</label>
-                            <select class="form-select" id="role" name="role" required>
-                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Administrator</option>
-                                <option value="staff" {% if user.role == 'staff' %}selected{% endif %}>Staff</option>
-                                <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
-                            </select>
-                            <div class="form-text">
-                                <span class="text-danger">Admin:</span> Full access to all features
-                                <br>
-                                <span class="text-success">Staff:</span> Can manage events and clients
-                                <br>
-                                <span class="text-info">Viewer:</span> Read-only access
-                            </div>
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="{{ form.confirm_password.name }}">
+                            <div class="form-text">Required when setting a new password</div>
+                            {% if form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">{{ form.confirm_password.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role*</label>
+                        <select class="form-select" id="role" name="{{ form.role.name }}" required>
+                            {% for value, label in form.role.choices %}
+                            <option value="{{ value }}" {% if form.role.data == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.role.errors %}
+                        <div class="text-danger small mt-1">{{ form.role.errors[0] }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            <span class="text-danger">Admin:</span> Full access to all features
+                            <br>
+                            <span class="text-success">Staff:</span> Can manage events and clients
+                            <br>
+                            <span class="text-info">Viewer:</span> Read-only access
                         </div>
                     </div>
                     
@@ -74,7 +99,7 @@
                     {% endif %}
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-warning">
+                        <button type="submit" name="{{ form.submit.name }}" value="{{ form.submit.label.text }}" class="btn btn-warning">
                             <i class="fas fa-save me-1"></i>Save Changes
                         </button>
                     </div>
@@ -90,11 +115,18 @@
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
         const password = document.getElementById('new_password');
+        const confirmPassword = document.getElementById('confirm_password');
         
         form.addEventListener('submit', function(e) {
             if (password.value && password.value.length < 8) {
                 e.preventDefault();
                 alert('New password must be at least 8 characters long!');
+                return;
+            }
+
+            if (password.value && password.value !== confirmPassword.value) {
+                e.preventDefault();
+                alert('New password and confirmation do not match.');
                 return;
             }
         });

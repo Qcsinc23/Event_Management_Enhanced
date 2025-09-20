@@ -174,17 +174,24 @@
                         
                         <!-- Login Form -->
                         <form method="post" action="{{ url_for('login') }}" class="space-y-6">
+                            {{ form.hidden_tag() }}
                             <div>
                                 <label for="username" class="block text-sm font-semibold text-qcs-navy mb-2">
                                     <i class="fas fa-user mr-2 text-qcs-gray"></i>Username
                                 </label>
                                 <input type="text" 
                                        id="username" 
-                                       name="username" 
+                                       name="{{ form.username.name }}" 
                                        required 
                                        autofocus 
                                        placeholder="Enter your username"
+                                       value="{{ form.username.data or '' }}"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                {% if form.username.errors %}
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ form.username.errors[0] }}
+                                </p>
+                                {% endif %}
                             </div>
                             
                             <div>
@@ -194,7 +201,7 @@
                                 <div class="relative">
                                     <input type="password" 
                                            id="password" 
-                                           name="password" 
+                                           name="{{ form.password.name }}" 
                                            required 
                                            placeholder="Enter your password"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white pr-12">
@@ -209,9 +216,14 @@
                                         Forgot Password?
                                     </a>
                                 </div>
+                                {% if form.password.errors %}
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ form.password.errors[0] }}
+                                </p>
+                                {% endif %}
                             </div>
                             
-                            <button type="submit" 
+                            <button type="submit" name="{{ form.submit.name }}" value="{{ form.submit.label.text }}"
                                     class="w-full bg-gradient-to-r from-qcs-blue to-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 focus:ring-2 focus:ring-qcs-blue focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02]">
                                 <i class="fas fa-sign-in-alt mr-2"></i>
                                 Sign In

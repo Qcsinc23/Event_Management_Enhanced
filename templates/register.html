@@ -179,6 +179,7 @@
                         
                         <!-- Register Form -->
                         <form method="post" action="{{ url_for('register') }}" class="space-y-5">
+                            {{ form.hidden_tag() }}
                             <div class="grid grid-cols-1 gap-5">
                                 <div>
                                     <label for="full_name" class="block text-sm font-semibold text-qcs-navy mb-2">
@@ -186,11 +187,15 @@
                                     </label>
                                     <input type="text" 
                                            id="full_name" 
-                                           name="full_name" 
+                                           name="{{ form.full_name.name }}" 
                                            required 
                                            autofocus 
                                            placeholder="Enter your full name"
+                                           value="{{ form.full_name.data or '' }}"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                    {% if form.full_name.errors %}
+                                    <p class="mt-2 text-sm text-red-600">{{ form.full_name.errors[0] }}</p>
+                                    {% endif %}
                                 </div>
                                 
                                 <div>
@@ -199,10 +204,14 @@
                                     </label>
                                     <input type="text" 
                                            id="username" 
-                                           name="username" 
+                                           name="{{ form.username.name }}" 
                                            required 
                                            placeholder="Choose a username"
+                                           value="{{ form.username.data or '' }}"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                    {% if form.username.errors %}
+                                    <p class="mt-2 text-sm text-red-600">{{ form.username.errors[0] }}</p>
+                                    {% endif %}
                                 </div>
                                 
                                 <div>
@@ -211,10 +220,14 @@
                                     </label>
                                     <input type="email" 
                                            id="email" 
-                                           name="email" 
+                                           name="{{ form.email.name }}" 
                                            required 
                                            placeholder="Enter your email address"
+                                           value="{{ form.email.data or '' }}"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white">
+                                    {% if form.email.errors %}
+                                    <p class="mt-2 text-sm text-red-600">{{ form.email.errors[0] }}</p>
+                                    {% endif %}
                                 </div>
                                 
                                 <div>
@@ -222,9 +235,9 @@
                                         <i class="fas fa-lock mr-2 text-qcs-gray"></i>Password
                                     </label>
                                     <div class="relative">
-                                        <input type="password" 
+                                       <input type="password" 
                                                id="password" 
-                                               name="password" 
+                                               name="{{ form.password.name }}" 
                                                required 
                                                placeholder="Create a password"
                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white pr-12">
@@ -234,6 +247,9 @@
                                             <i class="fas fa-eye" id="toggleIcon1"></i>
                                         </button>
                                     </div>
+                                    {% if form.password.errors %}
+                                    <p class="mt-2 text-sm text-red-600">{{ form.password.errors[0] }}</p>
+                                    {% endif %}
                                 </div>
                                 
                                 <div>
@@ -241,9 +257,9 @@
                                         <i class="fas fa-lock mr-2 text-qcs-gray"></i>Confirm Password
                                     </label>
                                     <div class="relative">
-                                        <input type="password" 
+                                       <input type="password" 
                                                id="confirm_password" 
-                                               name="confirm_password" 
+                                               name="{{ form.confirm_password.name }}" 
                                                required 
                                                placeholder="Confirm your password"
                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-qcs-blue focus:border-transparent transition-colors bg-gray-50 focus:bg-white pr-12">
@@ -253,6 +269,9 @@
                                             <i class="fas fa-eye" id="toggleIcon2"></i>
                                         </button>
                                     </div>
+                                    {% if form.confirm_password.errors %}
+                                    <p class="mt-2 text-sm text-red-600">{{ form.confirm_password.errors[0] }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
                             
@@ -268,7 +287,7 @@
                                 <div class="text-xs text-qcs-gray" id="strengthText">Enter a password</div>
                             </div>
                             
-                            <button type="submit" 
+                            <button type="submit" name="{{ form.submit.name }}" value="{{ form.submit.label.text }}"
                                     class="w-full bg-gradient-to-r from-qcs-blue to-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 focus:ring-2 focus:ring-qcs-blue focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02]">
                                 <i class="fas fa-user-plus mr-2"></i>
                                 Create Account

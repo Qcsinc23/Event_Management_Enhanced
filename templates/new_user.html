@@ -18,45 +18,68 @@
             </div>
             <div class="card-body">
                 <form method="post">
+                    {{ form.hidden_tag() }}
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="username" class="form-label">Username*</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <input type="text" class="form-control" id="username" name="{{ form.username.name }}" value="{{ form.username.data or '' }}" required>
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors[0] }}</div>
+                            {% endif %}
                         </div>
                         
                         <div class="col-md-6">
                             <label for="full_name" class="form-label">Full Name*</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" required>
+                            <input type="text" class="form-control" id="full_name" name="{{ form.full_name.name }}" value="{{ form.full_name.data or '' }}" required>
+                            {% if form.full_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.full_name.errors[0] }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address*</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <input type="email" class="form-control" id="email" name="{{ form.email.name }}" value="{{ form.email.data or '' }}" required>
+                        {% if form.email.errors %}
+                        <div class="text-danger small mt-1">{{ form.email.errors[0] }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="password" class="form-label">Password*</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <input type="password" class="form-control" id="password" name="{{ form.password.name }}" required>
                             <div class="form-text">Use at least 8 characters with a mix of letters, numbers & symbols</div>
+                            {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors[0] }}</div>
+                            {% endif %}
                         </div>
-                        
                         <div class="col-md-6">
-                            <label for="role" class="form-label">Role*</label>
-                            <select class="form-select" id="role" name="role" required>
-                                <option value="">Select Role</option>
-                                <option value="admin">Administrator</option>
-                                <option value="staff">Staff</option>
-                                <option value="viewer">Viewer</option>
-                            </select>
-                            <div class="form-text">
-                                <span class="text-danger">Admin:</span> Full access to all features
-                                <br>
-                                <span class="text-success">Staff:</span> Can manage events and clients
-                                <br>
-                                <span class="text-info">Viewer:</span> Read-only access
-                            </div>
+                            <label for="confirm_password" class="form-label">Confirm Password*</label>
+                            <input type="password" class="form-control" id="confirm_password" name="{{ form.confirm_password.name }}" required>
+                            {% if form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">{{ form.confirm_password.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role*</label>
+                        <select class="form-select" id="role" name="{{ form.role.name }}" required>
+                            <option value="">Select Role</option>
+                            {% for value, label in form.role.choices %}
+                            <option value="{{ value }}" {% if form.role.data == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.role.errors %}
+                        <div class="text-danger small mt-1">{{ form.role.errors[0] }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            <span class="text-danger">Admin:</span> Full access to all features
+                            <br>
+                            <span class="text-success">Staff:</span> Can manage events and clients
+                            <br>
+                            <span class="text-info">Viewer:</span> Read-only access
                         </div>
                     </div>
                     
@@ -65,7 +88,7 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" name="{{ form.submit.name }}" value="{{ form.submit.label.text }}" class="btn btn-primary">
                             <i class="fas fa-user-plus me-1"></i>Create User
                         </button>
                     </div>

@@ -10,6 +10,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from functools import wraps
 from werkzeug.exceptions import Forbidden
 import tempfile
+from forms import (
+    LoginForm,
+    RegistrationForm,
+    ForgotPasswordForm,
+    ResetPasswordForm,
+    ProfileForm,
+    PasswordChangeForm,
+    UserCreateForm,
+    UserEditForm,
+)
+from flask_wtf import CSRFProtect
 
 # Custom password hashing functions compatible with Python 3.9+
 # These functions replicate Werkzeug's format but avoid the hmac.new() digestmod issue.
@@ -110,6 +121,16 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_please_change_in_production')
 app.config['DATABASE'] = os.path.join(app.root_path, 'database.db')
 
+csrf = CSRFProtect(app)
+
+
+def flash_form_errors(form):
+    """Flash all errors for a submitted form."""
+    for field_name, errors in form.errors.items():
+        label = getattr(form, field_name).label.text if hasattr(form, field_name) else field_name.replace('_', ' ').title()
+        for error in errors:
+            flash(f"{label}: {error}", 'danger')
+
 # Security enhancements
 @app.after_request
 def add_security_headers(response):
@@ -203,71 +224,59 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """User login"""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        password = form.password.data
 
         db = get_db()
-        error = None
         user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
 
-        if user is None:
-            error = 'Invalid username'
-        elif not check_password_hash(user['password_hash'], password):
-            error = 'Invalid password'
-
-        if error is None:
-            # Update last login time
+        if not user or not check_password_hash(user['password_hash'], password):
+            form.password.errors.append('Invalid username or password')
+            flash_form_errors(form)
+        else:
             db.execute(
                 'UPDATE users SET last_login = ? WHERE id = ?',
                 (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['id'])
             )
             db.commit()
 
-            # Set session
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
             flash('Login successful', 'success')
             return redirect(url_for('index'))
+    elif request.method == 'POST':
+        flash_form_errors(form)
 
-        flash(error, 'danger')
-
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """User registration"""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form['email']
-        full_name = request.form['full_name']
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        email = form.email.data.strip()
+        full_name = form.full_name.data.strip()
+        password = form.password.data
 
         db = get_db()
-        error = None
+        username_exists = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        email_exists = db.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone()
 
-        if not username:
-            error = 'Username is required'
-        elif not password:
-            error = 'Password is required'
-        elif password != confirm_password:
-            error = 'Passwords do not match'
-        elif not email:
-            error = 'Email is required'
-        elif not full_name:
-            error = 'Full name is required'
-        elif db.execute('SELECT id FROM users WHERE username = ?',
-                       (username,)).fetchone() is not None:
-            error = f"User {username} is already registered"
-        elif db.execute('SELECT id FROM users WHERE email = ?',
-                       (email,)).fetchone() is not None:
-            error = f"Email {email} is already registered"
+        if username_exists:
+            form.username.errors.append(f'User {username} is already registered')
+        if email_exists:
+            form.email.errors.append(f'Email {email} is already registered')
 
-        if error is None:
-            # Default to 'viewer' role for new registrations
+        if form.errors:
+            flash_form_errors(form)
+        else:
             db.execute(
                 'INSERT INTO users (username, password_hash, email, full_name, role) VALUES (?, ?, ?, ?, ?)',
                 (username, generate_password_hash(password), email, full_name, 'viewer')
@@ -275,44 +284,43 @@ def register():
             db.commit()
             flash('Registration successful! You can now login.', 'success')
             return redirect(url_for('login'))
+    elif request.method == 'POST':
+        flash_form_errors(form)
 
-        flash(error, 'danger')
-
-    return render_template('register.html')
+    return render_template('register.html', form=form)
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     """Handle forgotten password requests"""
-    if request.method == 'POST':
-        email = request.form['email']
+    form = ForgotPasswordForm()
+
+    if form.validate_on_submit():
+        email = form.email.data.strip()
 
         db = get_db()
         user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
 
         if user is None:
-            # Don't reveal that email doesn't exist for security
             flash('If your email is registered, you will receive password reset instructions.', 'info')
             return redirect(url_for('login'))
 
-        # Generate token
         token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
         expires_at = (datetime.now() + timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
 
-        # Save token to database
         db.execute(
             'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
             (user['id'], token, expires_at)
         )
         db.commit()
 
-        # In a real application, would send email with reset link
-        # For this demo, just display the reset link
         reset_url = url_for('reset_password', token=token, _external=True)
         flash(f'Password reset link (would be emailed in production): {reset_url}', 'info')
 
         return redirect(url_for('login'))
+    elif request.method == 'POST':
+        flash_form_errors(form)
 
-    return render_template('forgot_password.html')
+    return render_template('forgot_password.html', form=form)
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -329,39 +337,27 @@ def reset_password(token):
         flash('Invalid or expired reset token. Please request a new one.', 'danger')
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
+    form = ResetPasswordForm()
 
-        error = None
-        if not password:
-            error = 'Password is required'
-        elif password != confirm_password:
-            error = 'Passwords do not match'
+    if form.validate_on_submit():
+        password = form.password.data
 
-        if error is not None:
-            flash(error, 'danger')
-        else:
-            # Update password
-            # Use token_data['user_id'] instead of token_data['id'] which is the token table's id
-            db.execute(
-                'UPDATE users SET password_hash = ? WHERE id = ?',
-                (generate_password_hash(password), token_data['user_id']) # Corrected key
-            ) # Added missing closing parenthesis
+        db.execute(
+            'UPDATE users SET password_hash = ? WHERE id = ?',
+            (generate_password_hash(password), token_data['user_id'])
+        )
+        db.execute(
+            'UPDATE password_reset_tokens SET used = 1 WHERE id = ?',
+            (token_data['id'],)
+        )
+        db.commit()
 
-            # Mark token as used
-            db.execute(
-                'UPDATE password_reset_tokens SET used = 1 WHERE id = ?',
-                (token_data['id'],)
-            )
-            db.commit()
+        flash('Password has been reset! You can now login with your new password.', 'success')
+        return redirect(url_for('login'))
+    elif request.method == 'POST':
+        flash_form_errors(form)
 
-            flash('Password has been reset! You can now login with your new password.', 'success')
-            return redirect(url_for('login'))
-
-        # Removed redundant flash(error, 'danger') here
-
-    return render_template('reset_password.html')
+    return render_template('reset_password.html', token=token, form=form)
 
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -369,62 +365,54 @@ def reset_password(token):
 def profile():
     """User profile management"""
     user = get_current_user()
+    profile_form = ProfileForm(data={'full_name': user['full_name'], 'email': user['email']})
+    password_form = PasswordChangeForm()
+    db = get_db()
 
-    if request.method == 'POST':
-        email = request.form['email']
-        full_name = request.form['full_name']
-        current_password = request.form.get('current_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
+    if profile_form.submit_profile.data:
+        if profile_form.validate():
+            email = profile_form.email.data.strip()
+            full_name = profile_form.full_name.data.strip()
 
-        db = get_db()
-        error = None
+            email_check = db.execute(
+                'SELECT id FROM users WHERE email = ? AND id != ?',
+                (email, user['id'])
+            ).fetchone()
 
-        # Check if email is already taken by another user
-        email_check = db.execute(
-            'SELECT id FROM users WHERE email = ? AND id != ?',
-            (email, user['id'])
-        ).fetchone()
-
-        if not email:
-            error = 'Email is required'
-        elif not full_name:
-            error = 'Full name is required'
-        elif email_check:
-            error = 'Email is already in use by another account'
-
-        # Password change is optional
-        password_to_update = None
-        if new_password: # Only process password change if new password is provided
-            if not current_password:
-                error = 'Current password is required to set a new password.'
-            elif not check_password_hash(user['password_hash'], current_password):
-                error = 'Current password is incorrect'
-            elif new_password != confirm_password:
-                error = 'New passwords do not match'
+            if email_check:
+                profile_form.email.errors.append('Email is already in use by another account')
+                flash_form_errors(profile_form)
             else:
-                password_to_update = generate_password_hash(new_password)
-
-        if error is not None:
-            flash(error, 'danger')
-        else:
-            if password_to_update:
                 db.execute(
-                    '''UPDATE users SET email = ?, full_name = ?, password_hash = ? WHERE id = ?''',
-                    (email, full_name, password_to_update, user['id'])
-                )
-            else:
-                 db.execute(
-                    '''UPDATE users SET email = ?, full_name = ? WHERE id = ?''',
+                    'UPDATE users SET email = ?, full_name = ? WHERE id = ?',
                     (email, full_name, user['id'])
-                ) # Removed comma before WHERE, added missing closing parenthesis
-            db.commit()
-            flash('Profile updated successfully', 'success')
-            return redirect(url_for('profile'))
+                )
+                db.commit()
+                flash('Profile updated successfully', 'success')
+                return redirect(url_for('profile'))
+        else:
+            flash_form_errors(profile_form)
 
-        # Removed redundant flash(error, 'danger') here
+    elif password_form.submit_password.data:
+        if password_form.validate():
+            current_password = password_form.current_password.data
+            new_password = password_form.new_password.data
 
-    return render_template('profile.html', user=user)
+            if not check_password_hash(user['password_hash'], current_password):
+                password_form.current_password.errors.append('Current password is incorrect')
+                flash_form_errors(password_form)
+            else:
+                db.execute(
+                    'UPDATE users SET password_hash = ? WHERE id = ?',
+                    (generate_password_hash(new_password), user['id'])
+                )
+                db.commit()
+                flash('Password updated successfully', 'success')
+                return redirect(url_for('profile'))
+        else:
+            flash_form_errors(password_form)
+
+    return render_template('profile.html', user=user, profile_form=profile_form, password_form=password_form)
 
 
 @app.route('/users')
@@ -441,50 +429,38 @@ def users():
 @role_required('admin')
 def new_user():
     """Create a new user (admin only)"""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form['email']
-        full_name = request.form['full_name']
-        role = request.form['role']
+    form = UserCreateForm()
+    db = get_db()
 
-        db = get_db()
-        error = None
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        email = form.email.data.strip()
+        full_name = form.full_name.data.strip()
+        role = form.role.data
+        password = form.password.data
 
-        if not username:
-            error = 'Username is required'
-        elif not password:
-            error = 'Password is required'
-        elif password != confirm_password:
-            error = 'Passwords do not match'
-        elif not email:
-            error = 'Email is required'
-        elif not full_name:
-            error = 'Full name is required'
-        elif not role:
-            error = 'Role is required'
-        elif db.execute('SELECT id FROM users WHERE username = ?',
-                       (username,)).fetchone() is not None:
-            error = f"User {username} is already registered"
-        elif db.execute('SELECT id FROM users WHERE email = ?',
-                       (email,)).fetchone() is not None:
-            error = f"Email {email} is already registered"
+        username_exists = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        email_exists = db.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone()
 
-        if error is not None:
-            flash(error, 'danger')
+        if username_exists:
+            form.username.errors.append(f'User {username} is already registered')
+        if email_exists:
+            form.email.errors.append(f'Email {email} is already registered')
+
+        if form.errors:
+            flash_form_errors(form)
         else:
             db.execute(
                 'INSERT INTO users (username, password_hash, email, full_name, role) VALUES (?, ?, ?, ?, ?)',
                 (username, generate_password_hash(password), email, full_name, role)
             )
             db.commit()
-            flash('User created successfully!', 'success') # Changed message
-            return redirect(url_for('users')) # Redirect to users list
+            flash('User created successfully!', 'success')
+            return redirect(url_for('users'))
+    elif request.method == 'POST':
+        flash_form_errors(form)
 
-        # Removed redundant flash(error, 'danger') here
-
-    return render_template('new_user.html')
+    return render_template('new_user.html', form=form)
 
 
 @app.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -498,69 +474,57 @@ def edit_user(user_id):
     if user is None:
         abort(404)
 
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        full_name = request.form['full_name']
-        role = request.form['role']
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password') # Added confirm password check
+    form = UserEditForm(data={
+        'username': user['username'],
+        'email': user['email'],
+        'full_name': user['full_name'],
+        'role': user['role'],
+    })
 
-        error = None
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        email = form.email.data.strip()
+        full_name = form.full_name.data.strip()
+        role = form.role.data
+        new_password = form.new_password.data
 
-        # Check if username is already taken by another user
         username_check = db.execute(
             'SELECT id FROM users WHERE username = ? AND id != ?',
             (username, user_id)
         ).fetchone()
-
-        # Check if email is already taken by another user
         email_check = db.execute(
             'SELECT id FROM users WHERE email = ? AND id != ?',
             (email, user_id)
         ).fetchone()
 
-        if not username:
-            error = 'Username is required'
-        elif not email:
-            error = 'Email is required'
-        elif not full_name:
-            error = 'Full name is required'
-        elif not role:
-            error = 'Role is required'
-        elif username_check:
-            error = 'Username is already in use by another account'
-        elif email_check:
-            error = 'Email is already in use by another account'
+        if username_check:
+            form.username.errors.append('Username is already in use by another account')
+        if email_check:
+            form.email.errors.append('Email is already in use by another account')
+        if new_password and not form.confirm_password.data:
+            form.confirm_password.errors.append('Please confirm the new password')
 
-        # Password change validation
-        password_to_update = None
-        if new_password:
-            if new_password != confirm_password:
-                error = 'New passwords do not match'
-            else:
-                password_to_update = generate_password_hash(new_password)
-
-        if error is not None:
-            flash(error, 'danger')
+        if form.errors:
+            flash_form_errors(form)
         else:
-            if password_to_update:
-                 db.execute(
-                     'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, password_hash = ? WHERE id = ?',
-                     (username, email, full_name, role, password_to_update, user_id)
-                 )
+            if new_password:
+                db.execute(
+                    'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, password_hash = ? WHERE id = ?',
+                    (username, email, full_name, role, generate_password_hash(new_password), user_id)
+                )
             else:
-                 db.execute(
-                     'UPDATE users SET username = ?, email = ?, full_name = ?, role = ? WHERE id = ?',
-                     (username, email, full_name, role, user_id)
-                 )
+                db.execute(
+                    'UPDATE users SET username = ?, email = ?, full_name = ?, role = ? WHERE id = ?',
+                    (username, email, full_name, role, user_id)
+                )
             db.commit()
             flash('User updated successfully', 'success')
             return redirect(url_for('users'))
+    elif request.method == 'POST':
+        form.validate()
+        flash_form_errors(form)
 
-        # Removed redundant flash(error, 'danger') here
-
-    return render_template('edit_user.html', user=user)
+    return render_template('edit_user.html', user=user, form=form)
 
 
 @app.route('/users/<int:user_id>/delete', methods=['POST'])
