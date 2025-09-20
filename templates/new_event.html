@@ -90,6 +90,10 @@
                         </div>
                         <div class="col-md-6">
                             <label for="client_id" class="form-label">Client*</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control form-control-sm select-filter" data-target="client_id" placeholder="Search clients...">
+                            </div>
                             <select class="form-select" id="client_id" name="client_id" required>
                                 <option value="">Select Client</option>
                                 {% for client in clients %}
@@ -151,6 +155,10 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="location_id" class="form-label">Location</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control form-control-sm select-filter" data-target="location_id" placeholder="Search locations...">
+                            </div>
                             <select class="form-select" id="location_id" name="location_id">
                                 <option value="">Select a location</option>
                                 {% for location in locations %}

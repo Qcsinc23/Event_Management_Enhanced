@@ -71,6 +71,8 @@ function setupEventListeners() {
     
     setupEventFormValidation(document.getElementById('newEventForm'));
     setupEventFormValidation(document.getElementById('editEventForm'));
+    setupSelectFilters(document.getElementById('newEventForm'));
+    setupSelectFilters(document.getElementById('editEventForm'));
     setupConflictChecker(document.getElementById('newEventForm'));
     setupConflictChecker(document.getElementById('editEventForm'));
     setupLocationInsights(document.getElementById('newEventForm'));
@@ -386,6 +388,51 @@ function setupConflictChecker(form) {
 
     form.__triggerConflictCheck = fetchConflicts;
     fetchConflicts();
+}
+
+function setupSelectFilters(form) {
+    if (!form) return;
+
+    const filterInputs = form.querySelectorAll('.select-filter');
+    filterInputs.forEach(input => {
+        const targetId = input.getAttribute('data-target');
+        if (!targetId) return;
+        const select = form.querySelector(`#${targetId}`);
+        if (!select) return;
+
+        const options = Array.from(select.options);
+        if (!select.dataset.initialIndex) {
+            select.dataset.initialIndex = select.selectedIndex;
+        }
+
+        input.addEventListener('input', () => {
+            const term = input.value.trim().toLowerCase();
+
+            options.forEach(option => {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+                const match = option.text.toLowerCase().includes(term);
+                option.hidden = Boolean(term) && !match;
+            });
+
+            if (!term) {
+                const initialIndex = parseInt(select.dataset.initialIndex, 10);
+                if (!Number.isNaN(initialIndex)) {
+                    select.selectedIndex = initialIndex;
+                }
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                return;
+            }
+
+            const firstVisible = options.find(option => !option.hidden && option.value);
+            if (firstVisible) {
+                select.value = firstVisible.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    });
 }
 
 // Helper function to format time (HH:MM)
