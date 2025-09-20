@@ -25,16 +25,11 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            # Check if this is an API request (JSON or AJAX)
             if request.path.startswith('/api/') or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'error': 'Authentication required'}), 401
-            else:
-                flash('Please log in first', 'warning')
-                # Need to reference the login route endpoint correctly.
-                # Assuming 'login' is the endpoint name in app.py or a user blueprint.
-                # If login is in a blueprint (e.g., 'auth'), use 'auth.login'.
-                # For now, assuming it's a top-level route.
-                return redirect(url_for('login'))
+            flash('Please log in first', 'warning')
+            login_endpoint = 'auth.login' if 'auth.login' in current_app.view_functions else 'login'
+            return redirect(url_for(login_endpoint))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -43,13 +38,11 @@ def role_required(*roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session:
-                # Check if this is an API request
                 if request.path.startswith('/api/') or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({'error': 'Authentication required'}), 401
-                else:
-                    flash('Please log in first', 'warning')
-                    # Assuming 'login' is the endpoint name
-                    return redirect(url_for('login'))
+                flash('Please log in first', 'warning')
+                login_endpoint = 'auth.login' if 'auth.login' in current_app.view_functions else 'login'
+                return redirect(url_for(login_endpoint))
 
             # Check if user has required role
             db = get_db()

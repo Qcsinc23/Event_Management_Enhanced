@@ -178,7 +178,7 @@
                         {% endwith %}
                         
                         <!-- Register Form -->
-                        <form method="post" action="{{ url_for('register') }}" class="space-y-5">
+                        <form method="post" action="{{ url_for('auth.register') }}" class="space-y-5">
                             {{ form.hidden_tag() }}
                             <div class="grid grid-cols-1 gap-5">
                                 <div>
@@ -305,7 +305,7 @@
                         <div class="text-center">
                             <p class="text-qcs-gray">
                                 Already have an account? 
-                                <a href="{{ url_for('login') }}" class="text-qcs-blue hover:text-blue-700 font-semibold transition-colors">
+                                <a href="{{ url_for('auth.login') }}" class="text-qcs-blue hover:text-blue-700 font-semibold transition-colors">
                                     Sign In
                                 </a>
                             </p>

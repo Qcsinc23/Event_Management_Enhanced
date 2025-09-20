@@ -173,7 +173,7 @@
                         {% endwith %}
                         
                         <!-- Login Form -->
-                        <form method="post" action="{{ url_for('login') }}" class="space-y-6">
+                        <form method="post" action="{{ url_for('auth.login') }}" class="space-y-6">
                             {{ form.hidden_tag() }}
                             <div>
                                 <label for="username" class="block text-sm font-semibold text-qcs-navy mb-2">
@@ -212,7 +212,7 @@
                                     </button>
                                 </div>
                                 <div class="text-right mt-2">
-                                    <a href="{{ url_for('forgot_password') }}" class="text-sm text-qcs-blue hover:text-blue-700 transition-colors">
+                                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm text-qcs-blue hover:text-blue-700 transition-colors">
                                         Forgot Password?
                                     </a>
                                 </div>
@@ -241,7 +241,7 @@
                         <div class="text-center">
                             <p class="text-qcs-gray">
                                 Don't have an account? 
-                                <a href="{{ url_for('register') }}" class="text-qcs-blue hover:text-blue-700 font-semibold transition-colors">
+                                <a href="{{ url_for('auth.register') }}" class="text-qcs-blue hover:text-blue-700 font-semibold transition-colors">
                                     Create Account
                                 </a>
                             </p>

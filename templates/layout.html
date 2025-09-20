@@ -86,11 +86,11 @@
             <div class="header-right">
                 {% if not session.user_id %}
                 <nav class="auth-nav">
-                    <a href="{{ url_for('login') }}" class="auth-link signin">
+                    <a href="{{ url_for('auth.login') }}" class="auth-link signin">
                         <i class="fas fa-sign-in-alt d-md-none"></i>
                         <span>Sign In</span>
                     </a>
-                    <a href="{{ url_for('register') }}" class="auth-link signup">
+                    <a href="{{ url_for('auth.register') }}" class="auth-link signup">
                         <i class="fas fa-user-plus d-md-none"></i>
                         <span>Get Started</span>
                     </a>
@@ -164,7 +164,7 @@
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
                                 <i class="fas fa-user-circle"></i>
                                 <span>My Profile</span>
                             </a>
@@ -177,7 +177,7 @@
                                 <span>Calendar</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item logout-item" href="{{ url_for('logout') }}">
+                            <a class="dropdown-item logout-item" href="{{ url_for('auth.logout') }}">
                                 <i class="fas fa-sign-out-alt"></i>
                                 <span>Sign Out</span>
                             </a>
@@ -293,7 +293,7 @@
                     <span>Administration</span>
                 </li>
                 <li class="sidebar-item">
-                    <a class="sidebar-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">
+                    <a class="sidebar-link {% if request.endpoint == 'auth.manage_users' %}active{% endif %}" href="{{ url_for('auth.manage_users') }}">
                         <i class="fas fa-users-cog"></i>
                         <span>User Management</span>
                     </a>

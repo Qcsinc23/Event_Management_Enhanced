@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import sys
-from app import generate_password_hash
+from services.security import generate_password_hash
 
 def fix_admin():
     """Create or reset the admin user in the database"""

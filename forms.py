@@ -1,18 +1,5 @@
 """Form definitions for the Event Management application."""
-import flask
-from markupsafe import Markup
-import werkzeug.urls
-from urllib.parse import urlencode
-
-# Flask 3 removed flask.Markup; some dependencies still expect it.
-if not hasattr(flask, 'Markup'):
-    flask.Markup = Markup
-
-if not hasattr(werkzeug.urls, 'url_encode'):
-    def _url_encode(obj, charset='utf-8', sort=False):
-        return urlencode(obj, doseq=True)
-
-    werkzeug.urls.url_encode = _url_encode
+import compat  # Ensure Flask/Werkzeug compatibility shims are applied
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
