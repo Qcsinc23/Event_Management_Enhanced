@@ -87,14 +87,14 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
 
     # Low stock equipment/elements
     low_stock_rows = db.execute(
-        '''SELECT e.id, e.item_description, e.quantity, t.type_name
+        '''SELECT e.element_id, e.item_description, e.quantity, t.type_name
            FROM elements e
            JOIN element_types t ON e.type_id = t.type_id
            WHERE e.quantity IS NOT NULL AND e.quantity < 5
            ORDER BY e.quantity ASC LIMIT 5'''
     ).fetchall()
     for row in low_stock_rows:
-        notif_id = f"stock-low-{row['id']}"
+        notif_id = f"stock-low-{row['element_id']}"
         notifications.append({
             'id': notif_id,
             'title': 'Low Stock Alert',
