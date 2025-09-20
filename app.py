@@ -73,13 +73,48 @@ def index():
         return redirect(url_for('landing'))
 
     db = get_db()
-    # Get upcoming events
+    today = datetime.now().date()
+    today_str = today.strftime('%Y-%m-%d')
     upcoming_events = db.execute(
         'SELECT e.*, c.name as client_name, c.color as client_color '
         'FROM events e JOIN clients c ON e.client_id = c.id '
         'WHERE e.event_date >= ? '
         'ORDER BY e.event_date ASC LIMIT 5',
-        (datetime.now().strftime('%Y-%m-%d'),)
+        (today_str,)
+    ).fetchall()
+
+    upcoming_limit = (today + timedelta(days=7)).strftime('%Y-%m-%d')
+    overdue_tasks = db.execute(
+        '''SELECT t.id, t.description, t.due_date, t.status, e.event_name, e.event_id
+           FROM event_tasks t
+           JOIN events e ON t.event_id = e.event_id
+           WHERE t.status != 'completed' AND t.due_date IS NOT NULL AND t.due_date < ?
+           ORDER BY t.due_date ASC LIMIT 5''',
+        (today_str,)
+    ).fetchall()
+
+    upcoming_tasks = db.execute(
+        '''SELECT t.id, t.description, t.due_date, t.status, e.event_name, e.event_id
+           FROM event_tasks t
+           JOIN events e ON t.event_id = e.event_id
+           WHERE t.status != 'completed' AND t.due_date IS NOT NULL
+             AND t.due_date BETWEEN ? AND ?
+           ORDER BY t.due_date ASC LIMIT 5''',
+        (today_str, upcoming_limit)
+    ).fetchall()
+
+    utilization_horizon = (today + timedelta(days=30)).strftime('%Y-%m-%d')
+    equipment_utilization = db.execute(
+        '''SELECT eq.id, eq.name, SUM(ea.quantity) as total_quantity,
+                  COUNT(DISTINCT ea.event_id) as event_count
+           FROM equipment_assignments ea
+           JOIN events e ON ea.event_id = e.event_id
+           JOIN equipment eq ON ea.equipment_id = eq.id
+           WHERE e.event_date BETWEEN ? AND ?
+           GROUP BY eq.id, eq.name
+           ORDER BY total_quantity DESC
+           LIMIT 5''',
+        (today_str, utilization_horizon)
     ).fetchall()
 
     # Get stats (count of events by status)
@@ -109,8 +144,15 @@ def index():
     # Combine event and inventory stats
     stats = {**event_stats, **inventory_stats}
 
-    return render_template('index.html', upcoming_events=upcoming_events, stats=stats,
-                          low_stock_elements=low_stock_elements)
+    return render_template(
+        'index.html',
+        upcoming_events=upcoming_events,
+        stats=stats,
+        low_stock_elements=low_stock_elements,
+        overdue_tasks=overdue_tasks,
+        upcoming_tasks=upcoming_tasks,
+        equipment_utilization=equipment_utilization,
+    )
 
 # Client Management Routes
 @app.route('/clients')

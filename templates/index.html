@@ -187,6 +187,102 @@
 </div>
 
 <div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card dashboard-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Tasks At a Glance</h5>
+                <a href="{{ url_for('tasks.event_tasks', event_id=upcoming_events[0].event_id) if upcoming_events else url_for('calendar.calendar') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i>View Tasks
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <h6 class="text-danger text-uppercase small fw-bold">Overdue</h6>
+                        {% if overdue_tasks %}
+                        <ul class="list-unstyled mb-0">
+                            {% for task in overdue_tasks %}
+                            <li class="mb-3">
+                                <div class="fw-semibold">{{ task.description }}</div>
+                                <div class="text-muted small">
+                                    <i class="fas fa-calendar-day me-1"></i>{{ task.due_date }}
+                                    <br>
+                                    <a href="{{ url_for('tasks.event_tasks', event_id=task.event_id) }}" class="text-decoration-none">
+                                        <i class="fas fa-calendar-check me-1"></i>{{ task.event_name }}
+                                    </a>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted small mb-0">No overdue tasks. Great job!</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning text-uppercase small fw-bold">Due Soon</h6>
+                        {% if upcoming_tasks %}
+                        <ul class="list-unstyled mb-0">
+                            {% for task in upcoming_tasks %}
+                            <li class="mb-3">
+                                <div class="fw-semibold">{{ task.description }}</div>
+                                <div class="text-muted small">
+                                    <i class="fas fa-calendar-day me-1"></i>{{ task.due_date }}
+                                    <br>
+                                    <a href="{{ url_for('tasks.event_tasks', event_id=task.event_id) }}" class="text-decoration-none">
+                                        <i class="fas fa-calendar-check me-1"></i>{{ task.event_name }}
+                                    </a>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted small mb-0">No upcoming deadlines within the next week.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card dashboard-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-dolly me-2"></i>Equipment Utilization (30 days)</h5>
+                <a href="{{ url_for('equipment') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-tools me-1"></i>Manage Equipment
+                </a>
+            </div>
+            <div class="card-body">
+                {% if equipment_utilization %}
+                {% set max_qty = (equipment_utilization | map(attribute='total_quantity') | list) | max %}
+                <ul class="list-unstyled mb-0">
+                    {% for item in equipment_utilization %}
+                    {% set pct = (item.total_quantity / max_qty * 100) | round(0, 'floor') if max_qty else 0 %}
+                    <li class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ item.name }}</strong>
+                                <div class="text-muted small">
+                                    {{ item.total_quantity }} units across {{ item.event_count }} event{{ 's' if item.event_count != 1 else '' }}
+                                </div>
+                            </div>
+                            <span class="badge bg-primary">{{ pct }}%</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct }}%"></div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small mb-0">No upcoming equipment assignments in the next 30 days.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
     <div class="col-md-8">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
