@@ -77,6 +77,7 @@ function setupEventListeners() {
     setupConflictChecker(document.getElementById('editEventForm'));
     setupLocationInsights(document.getElementById('newEventForm'));
     setupLocationInsights(document.getElementById('editEventForm'));
+    setupTaskBoard(document.getElementById('taskBoard'));
 }
 
 // Helper function to format date (YYYY-MM-DD)
@@ -431,6 +432,121 @@ function setupSelectFilters(form) {
                 select.value = firstVisible.value;
                 select.dispatchEvent(new Event('change', { bubbles: true }));
             }
+        });
+    });
+}
+
+function setupTaskBoard(board) {
+    if (!board) return;
+
+    const columns = board.querySelectorAll('.kanban-column-body');
+    const csrfToken = board.dataset.csrf || '';
+    const baseUrl = board.dataset.changeStatusUrl;
+    const progressCard = document.getElementById('taskProgressCard');
+
+    let draggedCard = null;
+
+    const updateProgress = (summary) => {
+        if (!progressCard || !summary) return;
+        progressCard.dataset.completed = summary.completed;
+        progressCard.dataset.total = summary.total;
+        const bar = progressCard.querySelector('.progress-bar');
+        if (bar) {
+            bar.style.width = `${summary.percent}%`;
+            bar.setAttribute('aria-valuenow', summary.percent);
+            bar.textContent = `${summary.percent}%`;
+        }
+        const text = progressCard.querySelector('strong');
+        if (text) {
+            const strongs = progressCard.querySelectorAll('strong');
+            if (strongs.length >= 2) {
+                strongs[0].textContent = summary.completed;
+                strongs[1].textContent = summary.total;
+            }
+        }
+    };
+
+    const updateCounts = (summary) => {
+        if (!summary || !summary.counts) return;
+        Object.entries(summary.counts).forEach(([status, count]) => {
+            const badge = board.querySelector(`[data-status-count="${status}"]`);
+            if (badge) badge.textContent = count;
+        });
+    };
+
+    const makeRequest = async (taskId, status) => {
+        const url = baseUrl.replace('/0/status', `/${taskId}/status`);
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
+            },
+            body: JSON.stringify({ status })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Unable to update task status');
+        }
+        updateProgress(data.summary);
+        updateCounts(data.summary);
+    };
+
+    const cleanCardState = (card, status) => {
+        card.dataset.status = status;
+        card.classList.remove('completed');
+        card.classList.remove('overdue');
+        card.classList.remove('upcoming');
+        if (status === 'completed') {
+            card.classList.add('completed');
+        }
+    };
+
+    const handleDrop = async (column, event) => {
+        event.preventDefault();
+        column.classList.remove('over');
+        if (!draggedCard) return;
+
+        const newStatus = column.dataset.status;
+        const taskId = draggedCard.dataset.taskId;
+        const currentStatus = draggedCard.dataset.status;
+        if (!taskId || !newStatus || newStatus === currentStatus) {
+            column.appendChild(draggedCard);
+            return;
+        }
+
+        try {
+            await makeRequest(taskId, newStatus);
+            column.appendChild(draggedCard);
+            cleanCardState(draggedCard, newStatus);
+        } catch (err) {
+            alert(err.message);
+            board.querySelector(`.kanban-column-body[data-status="${currentStatus}"]`).appendChild(draggedCard);
+        }
+    };
+
+    columns.forEach(column => {
+        column.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            column.classList.add('over');
+        });
+        column.addEventListener('dragleave', () => {
+            column.classList.remove('over');
+        });
+        column.addEventListener('drop', (event) => handleDrop(column, event));
+    });
+
+    board.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragstart', () => {
+            draggedCard = card;
+            card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => {
+            if (draggedCard === card) {
+                draggedCard = null;
+            }
+            card.classList.remove('dragging');
         });
     });
 }
