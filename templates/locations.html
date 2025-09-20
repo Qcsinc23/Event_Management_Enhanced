@@ -111,7 +111,8 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="newLocationForm" action="{{ url_for('locations.new_location') }}" method="post">
+            <form id="newLocationForm" action="{{ url_for('locations.new_location') }}" method="post" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-8">
