@@ -741,6 +741,7 @@ def api_quick_add_event():
     try:
         event_name = request.form['event_name']
         event_date = request.form['event_date']
+        end_date = request.form.get('end_date') or None
         client_id = request.form.get('client_id')
         category_id = request.form.get('category_id')
         location_id = request.form.get('location_id')
@@ -1089,6 +1090,44 @@ def check_event_conflicts(db, event_id, start_date, end_date=None, location_id=N
 
     return conflicts
 
+
+def get_equipment_availability(db, equipment_id, start_date, end_date=None, exclude_event_id=None):
+    """Return available quantity for equipment within a date range."""
+    if not start_date:
+        return 0
+
+    try:
+        equipment_id = int(equipment_id)
+    except (TypeError, ValueError):
+        return 0
+
+    if not end_date:
+        end_date = start_date
+
+    reserved_query = (
+        '''SELECT COALESCE(SUM(ea.quantity), 0) AS reserved
+           FROM equipment_assignments ea
+           JOIN events ev ON ea.event_id = ev.event_id
+           WHERE ea.equipment_id = ?
+             AND ev.status != 'cancelled'
+             AND ev.event_date IS NOT NULL
+             AND ev.event_date <= ?
+             AND COALESCE(ev.end_date, ev.event_date) >= ?'''
+    )
+    params = [equipment_id, end_date, start_date]
+    if exclude_event_id:
+        reserved_query += ' AND ev.event_id != ?'
+        params.append(exclude_event_id)
+
+    reserved_row = db.execute(reserved_query, params).fetchone()
+    reserved = reserved_row['reserved'] if reserved_row else 0
+
+    total_row = db.execute('SELECT quantity FROM equipment WHERE id = ?', (equipment_id,)).fetchone()
+    total = total_row['quantity'] if total_row else 0
+
+    available = total - reserved
+    return max(available, 0)
+
 # Event routes
 @calendar_bp.route('/events/new', methods=['GET', 'POST'])
 @login_required
@@ -1102,6 +1141,7 @@ def new_event():
         event_date = request.form['event_date']
         drop_off_time = request.form['drop_off_time']
         pick_up_time = request.form['pickup_time']
+        end_date = request.form.get('end_date') or None
         location_id_raw = request.form.get('location_id', '').strip()
         event_location = request.form.get('event_location', '').strip()
 
@@ -1187,31 +1227,27 @@ def new_event():
             
             # Add equipment assignments
             for eq_id, qty in equipment_qtys.items():
+                eq_id_int = int(eq_id)
                 # Verify there's enough available equipment
-                available = db.execute(
-                    '''SELECT (e.quantity - COALESCE(
-                           (SELECT SUM(ea.quantity) FROM equipment_assignments ea 
-                            WHERE ea.equipment_id = e.id), 0)
-                       ) as available
-                       FROM equipment e WHERE e.id = ?''',
-                    (eq_id,)
-                ).fetchone()['available']
-                
+                available = get_equipment_availability(db, eq_id_int, event_date, end_date)
+                equipment_row = db.execute('SELECT name FROM equipment WHERE id = ?', (eq_id_int,)).fetchone()
+                equipment_name = equipment_row['name'] if equipment_row else f'#{eq_id_int}'
+
                 if available >= qty:
                     db.execute(
                         '''INSERT INTO equipment_assignments 
                            (event_id, equipment_id, quantity) 
                            VALUES (?, ?, ?)''',
-                        (event_id, eq_id, qty)
+                        (event_id, eq_id_int, qty)
                     )
                 else:
-                    flash(f'Warning: Could only assign {available} units of equipment #{eq_id}', 'warning')
+                    flash(f'Warning: Only {available} of {equipment_name} available for this date range.', 'warning')
                     if available > 0:
                         db.execute(
                             '''INSERT INTO equipment_assignments 
                                (event_id, equipment_id, quantity) 
                                VALUES (?, ?, ?)''',
-                            (event_id, eq_id, available)
+                            (event_id, eq_id_int, available)
                         )
             
             db.commit()
@@ -1360,31 +1396,26 @@ def edit_event(event_id):
             
             # Add new equipment assignments
             for eq_id, qty in equipment_qtys.items():
-                # Verify there's enough available equipment
-                available = db.execute(
-                    '''SELECT (e.quantity - COALESCE(
-                           (SELECT SUM(ea.quantity) FROM equipment_assignments ea 
-                            WHERE ea.equipment_id = e.id AND ea.event_id != ?), 0)
-                       ) as available
-                       FROM equipment e WHERE e.id = ?''',
-                    (event_id, eq_id)
-                ).fetchone()['available']
-                
+                eq_id_int = int(eq_id)
+                available = get_equipment_availability(db, eq_id_int, event_date, end_date, exclude_event_id=event_id)
+                equipment_row = db.execute('SELECT name FROM equipment WHERE id = ?', (eq_id_int,)).fetchone()
+                equipment_name = equipment_row['name'] if equipment_row else f'#{eq_id_int}'
+
                 if available >= qty:
                     db.execute(
                         '''INSERT INTO equipment_assignments 
                            (event_id, equipment_id, quantity) 
                            VALUES (?, ?, ?)''',
-                        (event_id, eq_id, qty)
+                        (event_id, eq_id_int, qty)
                     )
                 else:
-                    flash(f'Warning: Could only assign {available} units of equipment #{eq_id}', 'warning')
+                    flash(f'Warning: Only {available} of {equipment_name} available for this date range.', 'warning')
                     if available > 0:
                         db.execute(
                             '''INSERT INTO equipment_assignments 
                                (event_id, equipment_id, quantity) 
                                VALUES (?, ?, ?)''',
-                            (event_id, eq_id, available)
+                            (event_id, eq_id_int, available)
                         )
             
             db.commit()
@@ -1414,16 +1445,12 @@ def edit_event(event_id):
     ).fetchall()
     
     # Get equipment with availability info
-    equipment = db.execute(
-        '''SELECT e.*,
-           (e.quantity - COALESCE(
-               (SELECT SUM(ea.quantity) FROM equipment_assignments ea 
-                WHERE ea.equipment_id = e.id AND ea.event_id != ?), 0)
-           ) as available_qty
-           FROM equipment e 
-           ORDER BY e.name''',
-        (event_id,)
-    ).fetchall()
+    equipment_rows = db.execute('SELECT * FROM equipment ORDER BY name').fetchall()
+    event_end_date = event['end_date'] if event['end_date'] else event['event_date']
+    equipment = []
+    for item in equipment_rows:
+        available_qty = get_equipment_availability(db, item['id'], event['event_date'], event_end_date, exclude_event_id=event_id)
+        equipment.append({**dict(item), 'available_qty': available_qty})
     
     # Get current equipment assignments for this event
     current_assignments = db.execute(

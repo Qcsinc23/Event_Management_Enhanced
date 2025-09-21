@@ -17,11 +17,17 @@ STATUS_LOOKUP = dict(TASK_STATUS_CONFIG)
 
 def _serialize_task(row, today):
     due_date_obj = None
-    if row['due_date']:
-        try:
-            due_date_obj = datetime.strptime(row['due_date'], '%Y-%m-%d').date()
-        except ValueError:
-            due_date_obj = None
+    due_value = row['due_date']
+    if due_value:
+        if isinstance(due_value, datetime):
+            due_date_obj = due_value.date()
+        elif isinstance(due_value, date):
+            due_date_obj = due_value
+        else:
+            try:
+                due_date_obj = datetime.strptime(str(due_value), '%Y-%m-%d').date()
+            except ValueError:
+                due_date_obj = None
 
     is_completed = bool(row['is_completed']) or row['status'] == 'completed'
     is_overdue = due_date_obj and due_date_obj < today and not is_completed
@@ -35,7 +41,7 @@ def _serialize_task(row, today):
         'description': row['description'],
         'status': row['status'],
         'status_label': STATUS_LOOKUP.get(row['status'], row['status'].title()),
-        'due_date': row['due_date'],
+        'due_date': due_date_obj.strftime('%Y-%m-%d') if due_date_obj else None,
         'assigned_to': row['assigned_to'],
         'assigned_display': assigned_display,
         'is_completed': is_completed,

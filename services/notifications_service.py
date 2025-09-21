@@ -1,5 +1,5 @@
 """Notification generation for dashboard and header alerts."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import url_for
 
 SEVERITY_PRIORITY = {
@@ -14,10 +14,15 @@ def _relative_time(date_str, date_obj=None):
     if not date_str:
         return ""
     base = date_obj or datetime.now()
-    try:
-        target = datetime.strptime(date_str, '%Y-%m-%d')
-    except ValueError:
-        return date_str
+    if isinstance(date_str, datetime):
+        target = date_str
+    elif isinstance(date_str, date):
+        target = datetime.combine(date_str, datetime.min.time())
+    else:
+        try:
+            target = datetime.strptime(str(date_str), '%Y-%m-%d')
+        except ValueError:
+            return str(date_str)
     delta = target.date() - base.date()
     days = delta.days
     if days == 0:
@@ -49,6 +54,11 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
     ).fetchall()
     for row in overdue_rows:
         notif_id = f"task-overdue-{row['id']}"
+        due_str = row['due_date']
+        if isinstance(due_str, (datetime, date)):
+            due_str_fmt = due_str.strftime('%Y-%m-%d')
+        else:
+            due_str_fmt = str(due_str)
         notifications.append({
             'id': notif_id,
             'title': 'Task Overdue',
@@ -58,7 +68,7 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
             'link': url_for('tasks.event_tasks', event_id=row['event_id']),
             'category': 'tasks',
             'meta': row['event_name'],
-            'timestamp': row['due_date'] + ' 00:00:00',
+            'timestamp': due_str_fmt + ' 00:00:00',
         })
 
     # Tasks due soon (next 3 days)
@@ -73,6 +83,11 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
     ).fetchall()
     for row in soon_rows:
         notif_id = f"task-upcoming-{row['id']}"
+        due_str = row['due_date']
+        if isinstance(due_str, (datetime, date)):
+            due_str_fmt = due_str.strftime('%Y-%m-%d')
+        else:
+            due_str_fmt = str(due_str)
         notifications.append({
             'id': notif_id,
             'title': 'Task Due Soon',
@@ -82,7 +97,7 @@ def fetch_notifications(db, dismissed_ids=None, limit=10):
             'link': url_for('tasks.event_tasks', event_id=row['event_id']),
             'category': 'tasks',
             'meta': row['event_name'],
-            'timestamp': row['due_date'] + ' 00:00:00',
+            'timestamp': due_str_fmt + ' 00:00:00',
         })
 
     # Low stock equipment/elements

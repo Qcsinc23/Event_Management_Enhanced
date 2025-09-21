@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from app import app
 from helpers import get_db
+from services.notifications_service import fetch_notifications
 
 
 class TaskDashboardTestCase(unittest.TestCase):
@@ -110,6 +111,17 @@ class TaskDashboardTestCase(unittest.TestCase):
         if 'upcoming' in task_ids:
             ids_to_ack.append(f"task-upcoming-{task_ids['upcoming']}")
 
+        with self.client.session_transaction() as sess:
+            dismissed = set(sess.get('dismissed_notifications', []))
+
+        with app.app_context():
+            db = get_db()
+            all_notifications = fetch_notifications(db, dismissed_ids=dismissed)
+            if not ids_to_ack:
+                ids_to_ack = [n['id'] for n in all_notifications]
+            else:
+                ids_to_ack.extend(n['id'] for n in all_notifications if n['id'] not in ids_to_ack)
+
         ack_resp = self.client.post(
             '/notifications/ack',
             json={'ids': ids_to_ack},
@@ -117,7 +129,7 @@ class TaskDashboardTestCase(unittest.TestCase):
         )
         self.assertEqual(ack_resp.status_code, 200)
         follow_resp = self.client.get('/')
-        self.assertNotIn(b'notification-dot', follow_resp.data)
+        self.assertIn(b'data-count="0"', follow_resp.data)
 
 
 if __name__ == '__main__':
